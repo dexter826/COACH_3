@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Auto-fill Demo | YODY ATS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#2E3192',
+                            yellow: '#FCAF17',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen flex flex-col md:flex-row">
+
+    <!-- Left Pane: Input -->
+    <div class="w-full md:w-1/3 xl:w-[30%] p-8 border-r border-gray-200 bg-white flex flex-col h-screen overflow-y-auto shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 relative">
+        <div class="w-full">
+            <h1 class="text-3xl font-bold tracking-tight text-brand-blue mb-2">YODY <span class="text-brand-yellow">ATS</span></h1>
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Tạo hồ sơ tự động</h2>
+            <p class="text-gray-500 text-sm mb-8 leading-relaxed">Tải CV (PDF, Ảnh) lên để hệ thống tự động bóc tách và điền thông tin vào hồ sơ ứng viên.</p>
+            
+            <div class="space-y-6">
+                <!-- CV Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-brand-blue mb-2">Tải file CV (PDF, PNG, JPG)</label>
+                    <div class="mt-1 flex justify-center px-4 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md relative hover:bg-gray-50 hover:border-brand-yellow transition-colors group" id="dropzone">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-10 w-10 text-gray-400 group-hover:text-brand-yellow transition-colors" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600 justify-center mt-4">
+                                <label for="cvFile" class="relative cursor-pointer bg-transparent rounded-md font-medium text-brand-blue hover:text-brand-yellow focus-within:outline-none transition-colors">
+                                    <span>Chọn file</span>
+                                    <input id="cvFile" name="cvFile" type="file" class="sr-only" accept="application/pdf,image/png,image/jpeg">
+                                </label>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2" id="fileNameDisplay">Hỗ trợ PDF, PNG, JPG (Max 10MB)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="extractBtn" class="w-full bg-brand-blue hover:bg-[#20236a] text-white font-medium py-3 px-4 rounded-md shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                    <svg id="btnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span id="btnText">Trích xuất CV</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Pane: Form Output -->
+    <div class="w-full md:w-2/3 xl:w-[70%] p-8 lg:p-12 h-screen overflow-y-auto relative bg-[#f8f9fc]" id="formPane">
+        <div id="loadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 hidden flex-col items-center justify-center transition-all duration-300">
+            <svg class="animate-spin h-10 w-10 text-brand-yellow mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-sm font-medium text-brand-blue">AI đang quét & phân tích cấu trúc CV...</p>
+        </div>
+
+        <!-- TABS NAV -->
+        <div class="max-w-5xl mx-auto w-full mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button id="tab-cv" class="border-brand-blue text-brand-blue whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg">
+                        Hồ sơ ứng viên
+                    </button>
+                    <button id="tab-jd" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg transition-colors">
+                        Đánh giá độ phù hợp (JD Matcher)
+                    </button>
+                </nav>
+            </div>
+            <p class="text-sm text-gray-500 mt-3" id="tabDescription">Các thông tin dưới đây được AI tự động trích xuất và chuẩn hóa từ CV.</p>
+        </div>
+
+        <!-- TAB 1: CV FORM -->
+        <div id="content-cv" class="max-w-5xl mx-auto w-full">
+            <form class="space-y-6" id="candidateForm">
+                <!-- Thông tin cơ bản -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-6">
+                    <h3 class="text-lg font-bold text-gray-800 border-l-4 border-brand-yellow pl-3">Thông tin cơ bản</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Họ và Tên</label>
+                            <input type="text" id="form-fullName" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition text-sm focus:ring-1 focus:ring-brand-blue" readonly>
+                            <p class="error-msg text-xs text-red-500 mt-1 hidden"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="form-email" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition text-sm focus:ring-1 focus:ring-brand-blue" readonly>
+                            <p class="error-msg text-xs text-red-500 mt-1 hidden"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+                            <input type="text" id="form-phone" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition text-sm focus:ring-1 focus:ring-brand-blue" readonly>
+                            <p class="error-msg text-xs text-red-500 mt-1 hidden"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Địa điểm</label>
+                            <input type="text" id="form-location" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition text-sm focus:ring-1 focus:ring-brand-blue" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Vị trí hiện tại</label>
+                            <input type="text" id="form-currentTitle" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition text-sm focus:ring-1 focus:ring-brand-blue" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tổng kinh nghiệm (tháng)</label>
+                            <input type="text" id="form-totalExperienceMonths" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition text-sm focus:ring-1 focus:ring-brand-blue" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liên kết & MXH -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold text-gray-800 border-l-4 border-brand-yellow pl-3 mb-4">Liên kết</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                            <input type="text" id="form-link-linkedin" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition text-sm focus:ring-1 focus:ring-brand-blue" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">GitHub</label>
+                            <input type="text" id="form-link-github" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition text-sm focus:ring-1 focus:ring-brand-blue" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Portfolio</label>
+                            <input type="text" id="form-link-portfolio" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition text-sm focus:ring-1 focus:ring-brand-blue" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tóm tắt & Kỹ năng -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tóm tắt nghề nghiệp</label>
+                        <textarea id="form-professionalSummary" rows="3" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-3 py-2 border outline-none fill-transition resize-none text-sm focus:ring-1 focus:ring-brand-blue" readonly></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Kỹ năng cốt lõi</label>
+                            <div id="form-skills" class="flex flex-wrap gap-2 fill-transition rounded-md p-2 border border-transparent min-h-[44px]"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Ngoại ngữ</label>
+                            <div id="form-languages" class="flex flex-wrap gap-2 fill-transition rounded-md p-2 border border-transparent min-h-[44px]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Khối kinh nghiệm, Dự án, Học vấn -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800 border-l-4 border-brand-yellow pl-3 mb-4">Kinh nghiệm làm việc</h3>
+                            <div id="form-experience" class="grid grid-cols-1 gap-4 fill-transition rounded-md border border-transparent"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800 border-l-4 border-brand-yellow pl-3 mb-4">Dự án</h3>
+                            <div id="form-projects" class="grid grid-cols-1 gap-4 fill-transition rounded-md border border-transparent"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800 border-l-4 border-brand-yellow pl-3 mb-4">Học vấn</h3>
+                            <div id="form-education" class="grid grid-cols-1 gap-4 fill-transition rounded-md border border-transparent"></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800 border-l-4 border-brand-yellow pl-3 mb-4">Chứng chỉ</h3>
+                            <div id="form-certifications" class="grid grid-cols-1 gap-4 fill-transition rounded-md border border-transparent"></div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- TAB 2: JD MATCHER -->
+        <div id="content-jd" class="max-w-5xl mx-auto w-full hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Chọn mẫu JD hoặc tự nhập nội dung:</label>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <button type="button" class="jd-template-btn px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium text-gray-700 transition-colors" data-type="frontend">Mẫu Frontend Dev</button>
+                        <button type="button" class="jd-template-btn px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium text-gray-700 transition-colors" data-type="marketing">Mẫu Marketing</button>
+                    </div>
+                    <textarea id="jdInput" rows="5" class="w-full rounded-md border-gray-200 bg-gray-50 shadow-sm px-4 py-3 border outline-none text-sm focus:ring-1 focus:ring-brand-blue" placeholder="Dán nội dung Job Description (JD) vào đây..."></textarea>
+                </div>
+                
+                <button type="button" id="matchBtn" class="bg-brand-yellow hover:bg-[#e09b11] text-brand-blue font-bold py-2 px-6 rounded-md shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <span>Chấm điểm hồ sơ</span>
+                </button>
+
+                <!-- Match Result -->
+                <div id="matchResult" class="mt-6 pt-6 border-t border-gray-100 hidden transition-all duration-500">
+                    <div class="flex flex-col md:flex-row gap-8 items-center md:items-start">
+                        <!-- Score Gauge -->
+                        <div class="flex flex-col items-center">
+                            <div class="relative w-32 h-32">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                    <path class="text-gray-200" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path id="scorePath" class="text-brand-blue transition-all duration-1000 ease-out" stroke-dasharray="0, 100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                    <span id="scoreText" class="text-3xl font-bold text-gray-900">0%</span>
+                                </div>
+                            </div>
+                            <div id="recommendationBadge" class="mt-4 px-4 py-1.5 rounded-full text-sm font-bold bg-gray-100 text-gray-800 text-center">Chờ kết quả...</div>
+                        </div>
+                        
+                        <!-- Pros & Cons -->
+                        <div class="flex-1 w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-sm font-bold text-green-600 mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Điểm mạnh (Pros)
+                                </h4>
+                                <ul id="prosList" class="space-y-2 text-sm text-gray-700"></ul>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-red-500 mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    Thiếu sót (Cons)
+                                </h4>
+                                <ul id="consList" class="space-y-2 text-sm text-gray-700"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

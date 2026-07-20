@@ -1,0 +1,25 @@
+{
+  "candidate": {
+    "fullName": "",
+    "email": "",
+    "phone": "",
+    "location": "",
+    "currentTitle": "",
+    "professionalSummary": "",
+    "totalExperienceMonths": null,
+    "skills": [],
+    "languages": [],
+    "links": {
+      "linkedin": "",
+      "github": "",
+      "portfolio": "",
+      "others": []
+    }
+  },
+  "workExperience": [],
+  "projects": [],
+  "education": [],
+  "certifications": [],
+  "missingFields": [],
+  "uncertainFields": []
+}

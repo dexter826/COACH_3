@@ -1,0 +1,59 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.fill-transition {
+    transition: all 0.4s ease-out;
+}
+
+/* Hiệu ứng chớp khi điền thành công */
+.highlight-success {
+    border-color: #2E3192 !important; /* YODY Blue */
+    background-color: #f5f6fa !important;
+    box-shadow: 0 0 0 4px rgba(46, 49, 146, 0.1) !important;
+    transform: scale(1.01);
+}
+
+/* Hiệu ứng chớp đỏ khi thiếu thông tin */
+.highlight-error {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Style cho text input báo lỗi (lưu lại sau khi chớp) */
+input.error-state {
+    border-color: #ef4444;
+}
+
+/* Pill kỹ năng */
+.skill-pill {
+    background-color: #f5f6fa;
+    color: #2E3192;
+    border: 1px solid #e2e8f0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Khối kinh nghiệm */
+.exp-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid #2E3192;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    animation: slideUp 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
