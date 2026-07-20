@@ -30,7 +30,7 @@ cvFileInput.addEventListener('change', (e) => {
         fileNameDisplay.textContent = `Đã chọn: ${e.target.files[0].name}`;
         fileNameDisplay.classList.add('text-brand-blue', 'font-medium');
     } else {
-        fileNameDisplay.textContent = "Hỗ trợ PDF, PNG, JPG (Max 10MB)";
+        fileNameDisplay.textContent = "Chỉ hỗ trợ định dạng PDF (Max 10MB)";
         fileNameDisplay.classList.remove('text-brand-blue', 'font-medium');
     }
 });
