@@ -1,59 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --canvas-white: #ffffff;
+    --surface-gray: #f3f4f6;
+    --ink-navy: #111928;
+    --muted-gray: #9ca3af;
+    --hairline-gray: #e5e7eb;
+    --yody-gold: #fab005;
+    --yody-indigo: #3f3f99;
+    --yody-indigo-dark: #2a2a86;
+}
+
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    color: var(--ink-navy);
+    background-color: var(--canvas-white);
 }
 
 .fill-transition {
-    transition: all 0.4s ease-out;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Hiệu ứng chớp khi điền thành công */
 .highlight-success {
-    border-color: #2E3192 !important; /* YODY Blue */
-    background-color: #f5f6fa !important;
-    box-shadow: 0 0 0 4px rgba(46, 49, 146, 0.1) !important;
-    transform: scale(1.01);
+    border-color: var(--yody-indigo) !important;
+    background-color: #f4f4fc !important;
+    box-shadow: 0 0 0 4px rgba(63, 63, 153, 0.12) !important;
+    transform: translateY(-1px);
 }
 
-/* Hiệu ứng chớp đỏ khi thiếu thông tin */
 .highlight-error {
     border-color: #ef4444 !important;
     background-color: #fef2f2 !important;
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
 }
 
-/* Style cho text input báo lỗi (lưu lại sau khi chớp) */
-input.error-state {
-    border-color: #ef4444;
+input.error-state, textarea.error-state {
+    border-color: #ef4444 !important;
 }
 
-/* Pill kỹ năng */
 .skill-pill {
-    background-color: #f5f6fa;
-    color: #2E3192;
-    border: 1px solid #e2e8f0;
-    padding: 0.25rem 0.75rem;
+    background-color: var(--surface-gray);
+    color: var(--yody-indigo-dark);
+    border: 1px solid var(--hairline-gray);
+    padding: 0.35rem 0.85rem;
     border-radius: 9999px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    animation: fadeIn 0.4s ease-out forwards;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Khối kinh nghiệm */
 .exp-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-left: 3px solid #2E3192;
+    background: var(--canvas-white);
+    border: 1px solid var(--hairline-gray);
+    border-left: 4px solid var(--yody-indigo);
     border-radius: 0.5rem;
-    padding: 1rem;
-    animation: slideUp 0.4s ease-out forwards;
+    padding: 1.25rem;
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.match-score-badge {
+    background: linear-gradient(135deg, #fab005 0%, #f59f00 100%);
+    color: #111928;
+    font-weight: 800;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
+    from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--surface-gray);
+}
+::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-gray);
 }
