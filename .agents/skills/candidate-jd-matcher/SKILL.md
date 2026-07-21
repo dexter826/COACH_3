@@ -1,5 +1,6 @@
 ---
 name: candidate-jd-matcher
+version: 1.0.0
 description: Đánh giá độ phù hợp của Hồ sơ ứng viên (JSON) với Yêu cầu công việc JD (Text) và trả về điểm số, phân tích.
 ---
 

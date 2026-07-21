@@ -1,5 +1,6 @@
 ---
 name: cv-to-candidate-record
+version: 1.0.0
 description: Chuyển một CV thành hồ sơ ứng viên có cấu trúc, sẵn sàng để lưu vào hệ thống ATS.
 ---
 
