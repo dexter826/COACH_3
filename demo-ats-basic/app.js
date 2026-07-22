@@ -331,7 +331,11 @@ document.getElementById('matchBtn').addEventListener('click', async () => {
 
         const matchResult = await response.json();
         
-        document.getElementById('matchResult').classList.remove('hidden');
+        const matchResultEl = document.getElementById('matchResult');
+        matchResultEl.classList.remove('hidden');
+        setTimeout(() => {
+            matchResultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
         
         const score = matchResult.score || 0;
         document.getElementById('scoreText').textContent = score + '%';
