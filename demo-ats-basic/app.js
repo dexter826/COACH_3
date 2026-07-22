@@ -72,16 +72,28 @@ extractBtn.addEventListener('click', async () => {
     }
 });
 
-// Trạng thái chờ xử lý trích xuất CV
+// Trạng thái chờ xử lý trích xuất CV (Lock UI Canvas hoàn toàn)
 function setLoading(isLoading) {
+    const formPane = document.getElementById('formPane');
     if (isLoading) {
         extractBtn.disabled = true;
         document.getElementById('btnText').textContent = "Đang xử lý...";
+        
+        // Khóa cuộn & cuộn lên đầu canvas để che mờ toàn bộ UI
+        formPane.scrollTop = 0;
+        formPane.classList.add('overflow-hidden', 'pointer-events-none');
+        formPane.classList.remove('overflow-y-auto');
+
         loadingOverlay.classList.remove('hidden');
         loadingOverlay.classList.add('flex');
     } else {
         extractBtn.disabled = false;
         document.getElementById('btnText').textContent = "Trích xuất CV";
+        
+        // Mở lại cuộn & tương tác UI
+        formPane.classList.remove('overflow-hidden', 'pointer-events-none');
+        formPane.classList.add('overflow-y-auto');
+
         loadingOverlay.classList.add('hidden');
         loadingOverlay.classList.remove('flex');
     }
@@ -98,14 +110,14 @@ function triggerHighlight(element, isSuccess, errorMsg = "") {
             element.classList.remove('highlight-success');
         }, 1000);
     } else {
-        element.classList.add('highlight-error', 'error-state');
+        element.classList.add('highlight-error');
         setTimeout(() => {
             element.classList.remove('highlight-error');
         }, 1000);
     }
 }
 
-// Lấy chữ cái đầu làm Avatar
+// Tạo chữ cái viết tắt tên ứng viên
 function getInitials(name) {
     if (!name) return "YD";
     const parts = name.trim().split(/\s+/);
@@ -221,7 +233,7 @@ function fillForm(record) {
     `);
 }
 
-// JD Mẫu kiểm thử
+// JD Mẫu kiểm thử ban đầu
 const JDTemplates = {
     pass: `Vị trí: JUNIOR / ASSOCIATE FRONTEND ENGINEER (REACT / TYPESCRIPT / FIREBASE)
 
@@ -252,10 +264,39 @@ Quản trị hạ tầng điện toán đám mây quy mô lớn và phát triể
 
 document.querySelectorAll('.jd-template-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        const type = e.target.dataset.type;
-        document.getElementById('jdInput').value = JDTemplates[type];
+        const type = e.currentTarget.dataset.type;
+        if (JDTemplates[type]) {
+            document.getElementById('jdInput').value = JDTemplates[type];
+        }
     });
 });
+
+// Quản lý Modal xem full JD
+const toggleJdExpandBtn = document.getElementById('toggleJdExpand');
+const jdModal = document.getElementById('jdModal');
+const closeJdModalBtn = document.getElementById('closeJdModal');
+const saveJdModalBtn = document.getElementById('saveJdModal');
+const modalJdInput = document.getElementById('modalJdInput');
+
+if (toggleJdExpandBtn) {
+    toggleJdExpandBtn.addEventListener('click', () => {
+        modalJdInput.value = document.getElementById('jdInput').value;
+        jdModal.classList.remove('hidden');
+    });
+}
+
+if (closeJdModalBtn) {
+    closeJdModalBtn.addEventListener('click', () => {
+        jdModal.classList.add('hidden');
+    });
+}
+
+if (saveJdModalBtn) {
+    saveJdModalBtn.addEventListener('click', () => {
+        document.getElementById('jdInput').value = modalJdInput.value;
+        jdModal.classList.add('hidden');
+    });
+}
 
 // Chấm điểm độ phù hợp JD
 document.getElementById('matchBtn').addEventListener('click', async () => {
@@ -297,16 +338,30 @@ document.getElementById('matchBtn').addEventListener('click', async () => {
         document.getElementById('scorePath').setAttribute('stroke-dasharray', `${score}, 100`);
         
         const badge = document.getElementById('recommendationBadge');
-        badge.textContent = matchResult.recommendation;
-        if (score >= 80) badge.className = "conf-badge conf-high mt-2.5 text-center";
-        else if (score >= 50) badge.className = "conf-badge conf-med mt-2.5 text-center";
-        else badge.className = "conf-badge conf-low mt-2.5 text-center";
+        const reasonBox = document.getElementById('reasonBox');
+        const reasonTitle = document.getElementById('reasonTitle');
+        const reasonIcon = document.getElementById('reasonIcon');
+        const reasonText = document.getElementById('reasonText');
 
-        const prosList = document.getElementById('prosList');
-        prosList.innerHTML = (matchResult.pros || []).map(p => `<li class="flex items-start gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>${p}</span></li>`).join('');
-        
-        const consList = document.getElementById('consList');
-        consList.innerHTML = (matchResult.cons || []).map(c => `<li class="flex items-start gap-2"><span class="text-rose-600 font-bold">✗</span> <span>${c}</span></li>`).join('');
+        badge.textContent = matchResult.recommendation;
+        reasonText.textContent = matchResult.reason || 'Chưa có thông tin đánh giá.';
+
+        if (score >= 80) {
+            badge.className = "conf-badge conf-high mt-2.5 text-center shadow-xs";
+            reasonBox.className = "p-4 rounded-2xl border bg-emerald-50/90 border-emerald-200 text-emerald-950 fill-transition shadow-2xs";
+            reasonTitle.className = "text-[11px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 font-mono text-emerald-800";
+            reasonIcon.innerHTML = '<svg class="w-4 h-4 text-emerald-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        } else if (score >= 50) {
+            badge.className = "conf-badge conf-med mt-2.5 text-center shadow-xs";
+            reasonBox.className = "p-4 rounded-2xl border bg-amber-50/90 border-amber-200 text-amber-950 fill-transition shadow-2xs";
+            reasonTitle.className = "text-[11px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 font-mono text-amber-800";
+            reasonIcon.innerHTML = '<svg class="w-4 h-4 text-amber-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+        } else {
+            badge.className = "conf-badge conf-low mt-2.5 text-center shadow-xs";
+            reasonBox.className = "p-4 rounded-2xl border bg-rose-50/90 border-rose-200 text-rose-950 fill-transition shadow-2xs";
+            reasonTitle.className = "text-[11px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 font-mono text-rose-800";
+            reasonIcon.innerHTML = '<svg class="w-4 h-4 text-rose-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        }
 
     } catch (error) {
         alert("Đã xảy ra lỗi: " + error.message);

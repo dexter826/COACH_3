@@ -18,24 +18,15 @@ Nhiệm vụ của bạn là so sánh một cách linh hoạt (semantic match, k
 ## Hướng dẫn chấm điểm & Phân tích
 - **Linh hoạt & Thông minh:** Nếu JD yêu cầu "Frontend Framework" và ứng viên có "React", hãy tính là điểm cộng mạnh.
 - **Score:** Chấm điểm từ 0 đến 100 dựa trên: Kỹ năng chuyên môn, Kinh nghiệm làm việc (số năm và mức độ sâu), Học vấn.
-- **Pros (Điểm mạnh):** Tìm ra 3 điểm mà ứng viên đáp ứng tốt nhất với JD.
-- **Cons (Điểm yếu/Lỗ hổng):** Tìm ra 2-3 rủi ro, hoặc các kỹ năng/kinh nghiệm ứng viên chưa có so với JD.
 - **Recommendation:** Chỉ chọn 1 trong 3 trạng thái: "NÊN PHỎNG VẤN", "CÂN NHẮC", "TỪ CHỐI".
+- **Reason (Tóm tắt lý do):** Viết 1-2 câu ngắn gọn giải thích nguyên nhân chính đưa ra điểm số và khuyến nghị (nêu điểm mạnh vượt trội và lỗ hổng quan trọng nhất nếu có).
 
 ## Định dạng Đầu ra (Output Format)
 Bạn **PHẢI TRẢ VỀ DUY NHẤT** một chuỗi JSON hợp lệ theo đúng cấu trúc sau (không dùng markdown code block, không giải thích thêm):
 ```json
 {
   "score": 85,
-  "pros": [
-    "Kinh nghiệm dày dặn với React và hệ sinh thái Frontend.",
-    "Từng làm leader, phù hợp với yêu cầu quản lý team nhỏ.",
-    "Khớp số năm kinh nghiệm yêu cầu (3+ năm)."
-  ],
-  "cons": [
-    "Chưa thấy kinh nghiệm làm việc với Cloud (AWS) như JD yêu cầu.",
-    "Giao tiếp tiếng Anh có thể là rào cản vì không thấy chứng chỉ."
-  ],
-  "recommendation": "NÊN PHỎNG VẤN"
+  "recommendation": "NÊN PHỎNG VẤN",
+  "reason": "Ứng viên thành thạo React và khớp số năm kinh nghiệm theo JD (3+ năm), tuy nhiên chưa thấy thông tin về kinh nghiệm Cloud (AWS)."
 }
 ```

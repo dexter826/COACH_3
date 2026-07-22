@@ -132,9 +132,8 @@ app.post('/api/match-jd', async (req, res) => {
 Nhiệm vụ: Nhận vào JSON ứng viên và JD (text), so sánh linh hoạt (semantic match) và trả về JSON (Không giải thích, Không bọc code block):
 {
   "score": <number 0-100>,
-  "pros": [<3 chuỗi đánh giá điểm mạnh>],
-  "cons": [<2-3 chuỗi đánh giá điểm thiếu sót/rủi ro>],
-  "recommendation": "<NÊN PHỎNG VẤN / CÂN NHẮC / TỪ CHỐI>"
+  "recommendation": "<NÊN PHỎNG VẤN / CÂN NHẮC / TỪ CHỐI>",
+  "reason": "<Chuỗi 1-2 câu tóm tắt ngắn gọn lý do chính đưa ra điểm số và khuyến nghị>"
 }`;
 
         const promptText = `Hồ sơ ứng viên (JSON):\n${JSON.stringify(candidateRecord)}\n\nYêu cầu công việc (JD):\n${jobDescription}\n\nHãy phân tích mức độ phù hợp và trả về JSON theo đúng schema yêu cầu.`;
