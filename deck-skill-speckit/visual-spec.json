@@ -1,0 +1,16 @@
+[
+  {
+    "fileName": "ats_skills_structure.png",
+    "prompt": "Clean minimalist diagram representing ATS AI skills module architecture, file hierarchy and parsing pipeline, corporate tech style, white background, navy and yellow accents",
+    "aspectRatio": "16:9",
+    "altText": "Sơ đồ cấu trúc thư mục và tài nguyên của 2 AI Skill",
+    "placement": "cover"
+  },
+  {
+    "fileName": "ats_semantic_matching_concept.png",
+    "prompt": "Modern AI semantic matching concept diagram showing candidate JSON profile matching with job description text, high tech UI mockup, navy and golden yellow accents, white background",
+    "aspectRatio": "16:9",
+    "altText": "Mô phỏng AI Semantic Matching giữa Hồ sơ ứng viên và JD",
+    "placement": "cover"
+  }
+]

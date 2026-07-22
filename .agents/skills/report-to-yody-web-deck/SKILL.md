@@ -5,28 +5,26 @@ description: Chuyển báo cáo, dữ liệu, tài liệu văn phòng, PDF, hìn
 
 # Report to YODY Web Deck
 
-## Giai đoạn 1 — Phân tích và duyệt brief
+Skill hướng dẫn quy trình 2 giai đoạn chuyển đổi tài liệu thô thành bài trình bày Web Deck Reveal.js theo chuẩn Retail Editorial của YODY.
 
-1. Đọc toàn bộ tài liệu trong phạm vi người dùng giao bằng công cụ phù hợp. Công khai file lỗi, không hỗ trợ hoặc không truy cập được.
-2. Xác định mục tiêu, người nghe, thời lượng và giới hạn slide; không hỏi lại thông tin đã có. Nếu người dùng giao quyền quyết định thời lượng hoặc số slide, tự chọn và ghi rõ đó là giả định của AI.
-3. Đọc [references/brief-and-content.md](references/brief-and-content.md), xây storyline. **BẮT BUỘC chủ động rà soát và đề xuất ít nhất 1–3 vị trí hình ảnh minh họa đắt giá** (ảnh khái niệm AI concept, sơ đồ kiến trúc, UI mockup sản phẩm) vào các slide trọng tâm trong `brief.md`.
-4. Tạo `brief.md` đúng schema trong reference, ghi rõ nguồn đã đọc, dữ liệu thiếu, mâu thuẫn, giả định, suy luận và các vị trí ảnh đề xuất.
-5. Trình brief rồi **dừng lại**. Không khởi tạo project, cài dependency hoặc viết slide cho đến khi người dùng duyệt rõ ràng.
+## Giai Đoạn 1 — Phân Tích & Duyệt Brief
 
-## Giai đoạn 2 — Dựng và kiểm tra deck
+1. **Phân tích tài liệu gốc:** Đọc toàn bộ tài liệu đầu vào được giao. Xác định mục tiêu, đối tượng người nghe, thời lượng trình bày và giới hạn số slide.
+2. **Xây dựng Storyline & Brief:** Đọc [references/brief-and-content.md](references/brief-and-content.md). Chọn storyline phù hợp với mục tiêu và đề xuất 1–3 vị trí hình ảnh minh họa đắt giá (AI Concept, sơ đồ kiến trúc, UI mockup).
+3. **Tạo `brief.md`:** Khởi tạo file `brief.md` theo đúng schema quy định.
+4. **Trình duyệt & Tạm dừng:** Trình `brief.md` cho người dùng phê duyệt. **Không** khởi tạo mã nguồn deck hoặc cài đặt thư viện cho đến khi nhận được sự đồng ý rõ ràng.
 
-Chỉ bắt đầu sau khi brief được duyệt.
+## Giai Đoạn 2 — Khởi Tạo & Dựng Deck
 
-1. Đọc [references/design-and-review.md](references/design-and-review.md). Tuân thủ nghiêm ngặt quy tắc **Chống tràn khung (Zero-Overflow)** ở 1280×720, **Cân bằng khoảng không gian (Canvas Balance)** và **Đa dạng hóa bố cục** (Tuyệt đối không lặp lại mẫu Title + 3 Card nhàm chán).
-2. Với project mới, chạy `node scripts/init-deck.mjs <thu-muc-deck> --approved`. Với deck đã có, chỉnh tại chỗ và giữ nguyên tài liệu nguồn cùng asset hiện hữu; không chạy script khởi tạo. Nếu không xác định được loại project, hỏi người dùng trước khi sửa.
-3. Chuyển outline đã duyệt thành Reveal.js deck; sử dụng linh hoạt các dạng bố cục Editorial Typography, Asymmetric Split, Minimalist List, Process Flow, Table phẳng và Khung ảnh minh họa chiến lược để đảm bảo tính thẩm mỹ cao và nhịp điệu sinh động.
-4. Tạo `visual-spec.json` chứa khai báo hợp đồng các ảnh minh họa chưa có. Nếu người dùng yêu cầu tạo ảnh AI, sử dụng công cụ tạo ảnh để sinh ảnh và đặt vào thư mục `assets/`.
-5. Chạy `npm start`, kiểm tra từng slide ở 1280×720, sửa triệt để lỗi tràn/cắt/lệch, biểu đồ và điều hướng.
-6. Giao source hoàn chỉnh nhưng không đóng gói `node_modules`. Chỉ tạo speaker notes, nguồn trên slide, ảnh AI, PDF hoặc deploy khi người dùng yêu cầu.
+1. **Đọc Quy Chuẩn Thiết Kế:** Đọc [references/design-and-review.md](references/design-and-review.md) để nắm bộ quy tắc Design System, Lucide Icons và quy chuẩn chống tràn (Zero-Overflow).
+2. **Khởi tạo dự án:** 
+   - Dự án mới: Chạy `node scripts/init-deck.mjs <thu-muc-deck> --approved`.
+   - Dự án đã có: Chỉnh sửa trực tiếp tại thư mục hiện hành.
+3. **Dựng mã nguồn Slide:** Chuyển outline đã duyệt thành các phần tử HTML Reveal.js trong `index.html`. Sử dụng đa dạng các dạng bố cục (Editorial Typography, Asymmetric Split, Code/Spec Comparison, Process Flow).
+4. **Khai báo Visual Assets:** Tạo `visual-spec.json` khai báo hợp đồng các hình ảnh minh họa cần thiết và sinh ảnh vào thư mục `assets/`.
+5. **Kiểm tra trực quan & Đóng gói:** Chạy `npm start`, kiểm tra trực quan bài trình bày ở độ phân giải 1280×720 canvas, khắc phục triệt để các lỗi đè chữ, cắt lề hoặc tràn khung.
 
-## Đầu ra
-
-Project deck gồm:
+## Cấu Trúc Đầu Ra
 
 ```text
 brief.md
@@ -34,9 +32,6 @@ index.html
 css/yody-theme.css
 js/main.js
 visual-spec.json
-assets/yody-logo.png
+assets/
 package.json
-package-lock.json
 ```
-
-Nếu không thể review trong trình duyệt, báo rõ deck chưa được xác minh trực quan.
