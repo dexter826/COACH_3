@@ -1,0 +1,21 @@
+/* ═══════════════════════════════════════════════════════════
+   SCOPE: SCOPED — fashion DOMAIN kit, not universal foundation.
+   Reusable only inside YODY fashion products (PLM, lookbook,
+   vendor portal). Do not treat as a base primitive.
+   See README "Scope classification".
+   ═══════════════════════════════════════════════════════════ */
+/* ─────────────────────────────────────────────────────────
+   YODY Fashion Kit · INDEX
+   ─────────────────────────────────────────────────────────
+   Fashion-aware composites for PLM, lookbook, vendor portal.
+
+   Load AFTER colors_and_type + the Tailwind component layer:
+     <link rel="stylesheet" href="colors_and_type.css" />
+     <link rel="stylesheet" href="tailwind/yody.components.css (inline)" />
+     <link rel="stylesheet" href="ui_kits/yody-fashion/index.css" />
+
+   Compatible with all surfaces; primarily used under
+   [data-surface="app"] for PLM screens.
+   ───────────────────────────────────────────────────────── */
+
+@import url('./atoms.css');

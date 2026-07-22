@@ -2,6 +2,7 @@ const extractBtn = document.getElementById('extractBtn');
 const cvFileInput = document.getElementById('cvFile');
 const fileNameDisplay = document.getElementById('fileNameDisplay');
 const loadingOverlay = document.getElementById('loadingOverlay');
+const avatarInitials = document.getElementById('avatarInitials');
 
 const formFields = {
     fullName: document.getElementById('form-fullName'),
@@ -24,17 +25,18 @@ const formFields = {
 
 let currentCandidateRecord = null;
 
-// Cập nhật tên file đã chọn
+// Cập nhật tên file PDF đã chọn
 cvFileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
         fileNameDisplay.textContent = `Đã chọn: ${e.target.files[0].name}`;
-        fileNameDisplay.classList.add('text-yody-indigo', 'font-bold');
+        fileNameDisplay.classList.add('text-indigo-600', 'font-bold');
     } else {
-        fileNameDisplay.textContent = "Hỗ trợ định dạng PDF (Tối đa 10MB)";
-        fileNameDisplay.classList.remove('text-yody-indigo', 'font-bold');
+        fileNameDisplay.textContent = "Định dạng PDF (Tối đa 10MB)";
+        fileNameDisplay.classList.remove('text-indigo-600', 'font-bold');
     }
 });
 
+// Gửi file CV lên server bóc tách AI
 extractBtn.addEventListener('click', async () => {
     const files = cvFileInput.files;
 
@@ -62,7 +64,6 @@ extractBtn.addEventListener('click', async () => {
         const candidateRecord = await response.json();
         currentCandidateRecord = candidateRecord;
         fillForm(candidateRecord);
-        switchTab('cv');
 
     } catch (error) {
         alert("Đã xảy ra lỗi: " + error.message);
@@ -71,7 +72,7 @@ extractBtn.addEventListener('click', async () => {
     }
 });
 
-// Điều khiển overlay chờ bóc tách
+// Trạng thái chờ xử lý trích xuất CV
 function setLoading(isLoading) {
     if (isLoading) {
         extractBtn.disabled = true;
@@ -86,16 +87,9 @@ function setLoading(isLoading) {
     }
 }
 
-// Báo hiệu trực quan khi tự động điền dữ liệu
+// Báo hiệu trực quan dữ liệu tự động điền
 function triggerHighlight(element, isSuccess, errorMsg = "") {
     element.classList.remove('highlight-success', 'highlight-error', 'error-state');
-    const parent = element.parentElement;
-    const msgEl = parent ? parent.querySelector('.error-msg') : null;
-    if (msgEl) {
-        msgEl.classList.add('hidden');
-        msgEl.textContent = "";
-    }
-
     void element.offsetWidth;
 
     if (isSuccess) {
@@ -108,18 +102,24 @@ function triggerHighlight(element, isSuccess, errorMsg = "") {
         setTimeout(() => {
             element.classList.remove('highlight-error');
         }, 1000);
-        if (msgEl) {
-            msgEl.textContent = errorMsg;
-            msgEl.classList.remove('hidden');
-        }
     }
 }
 
-// Đổ dữ liệu CV vào form ứng viên
+// Lấy chữ cái đầu làm Avatar
+function getInitials(name) {
+    if (!name) return "YD";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// Đổ dữ liệu CV vào canvas ứng viên
 function fillForm(record) {
     const candidate = record.candidate || {};
     const links = candidate.links || {};
     const missing = record.missingFields || [];
+
+    avatarInitials.textContent = getInitials(candidate.fullName);
 
     const textMappings = ['fullName', 'email', 'phone', 'location', 'currentTitle', 'totalExperienceMonths', 'professionalSummary'];
     textMappings.forEach(key => {
@@ -127,7 +127,7 @@ function fillForm(record) {
         const val = candidate[key] !== null && candidate[key] !== undefined ? candidate[key] : "";
         
         if (missing.includes(key) || (!val && ['fullName', 'email', 'phone'].includes(key))) {
-            triggerHighlight(el, false, `AI không tìm thấy ${key}, vui lòng bổ sung.`);
+            triggerHighlight(el, false);
         } else {
             el.value = val;
             triggerHighlight(el, true);
@@ -152,17 +152,40 @@ function fillForm(record) {
             triggerHighlight(container, true);
             list.forEach(item => {
                 const span = document.createElement('span');
-                span.className = 'skill-pill';
+                span.className = 'tag-yody';
                 span.textContent = item;
                 container.appendChild(span);
             });
         } else {
             triggerHighlight(container, false);
-            container.innerHTML = `<span class="text-xs text-yody-muted italic font-medium">${emptyMsg}</span>`;
+            container.innerHTML = `<span class="text-xs text-slate-400 italic font-medium">${emptyMsg}</span>`;
         }
     };
     fillPills(candidate.skills, formFields.skills, "Chưa có dữ liệu kỹ năng");
     fillPills(candidate.languages, formFields.languages, "Chưa có dữ liệu ngoại ngữ");
+
+    // Render Timeline kinh nghiệm làm việc
+    const expContainer = formFields.workExperience;
+    expContainer.innerHTML = "";
+    if (record.workExperience && record.workExperience.length > 0) {
+        triggerHighlight(expContainer, true);
+        record.workExperience.forEach(exp => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'timeline-item';
+            itemDiv.innerHTML = `
+                <div class="timeline-dot"></div>
+                <div class="card-yody">
+                    <div class="font-bold text-slate-900 text-sm font-display">${exp.title || "Chưa rõ chức danh"}</div>
+                    <div class="text-xs font-semibold text-[#2a2b86] mt-0.5">${exp.company || "Công ty?"} <span class="text-slate-400 font-normal">| ${exp.startDate || "?"} - ${exp.endDate || "Hiện tại"}</span></div>
+                    ${exp.description ? `<p class="text-xs text-slate-600 mt-2 leading-relaxed">${exp.description}</p>` : ''}
+                </div>
+            `;
+            expContainer.appendChild(itemDiv);
+        });
+    } else {
+        triggerHighlight(expContainer, false);
+        expContainer.innerHTML = `<div class="text-xs text-slate-400 italic font-medium p-2">Chưa có dữ liệu kinh nghiệm</div>`;
+    }
 
     const fillCards = (list, container, emptyMsg, renderHtml) => {
         container.innerHTML = "";
@@ -170,41 +193,35 @@ function fillForm(record) {
             triggerHighlight(container, true);
             list.forEach(item => {
                 const div = document.createElement('div');
-                div.className = 'exp-card';
+                div.className = 'card-yody';
                 div.innerHTML = renderHtml(item);
                 container.appendChild(div);
             });
         } else {
             triggerHighlight(container, false);
-            container.innerHTML = `<div class="text-xs text-yody-muted italic font-medium p-2">${emptyMsg}</div>`;
+            container.innerHTML = `<div class="text-xs text-slate-400 italic font-medium p-2">${emptyMsg}</div>`;
         }
     };
 
-    fillCards(record.workExperience, formFields.workExperience, "Chưa có dữ liệu kinh nghiệm", (exp) => `
-        <div class="font-bold text-yody-ink text-sm">${exp.title || "Chưa rõ chức danh"}</div>
-        <div class="text-xs font-semibold text-yody-indigo mt-0.5">${exp.company || "Công ty?"} <span class="text-yody-muted font-normal">| ${exp.startDate || "?"} - ${exp.endDate || "Hiện tại"}</span></div>
-        ${exp.description ? `<p class="text-xs text-gray-600 mt-2 leading-relaxed">${exp.description}</p>` : ''}
-    `);
-
     fillCards(record.projects, formFields.projects, "Chưa có dữ liệu dự án", (proj) => `
-        <div class="font-bold text-yody-ink text-sm">${proj.name || "Tên dự án?"} <span class="font-semibold text-xs text-yody-indigo">(${proj.role || "Vai trò?"})</span></div>
-        <div class="text-xs text-yody-muted mt-1 truncate font-medium">${(proj.technologies || []).join(', ')}</div>
-        ${proj.description ? `<p class="text-xs text-gray-600 mt-1 leading-relaxed">${proj.description}</p>` : ''}
+        <div class="font-bold text-slate-900 text-sm font-display">${proj.name || "Tên dự án?"} <span class="font-semibold text-xs text-[#2a2b86]">(${proj.role || "Vai trò?"})</span></div>
+        <div class="text-xs text-slate-500 mt-1 truncate font-mono">${(proj.technologies || []).join(', ')}</div>
+        ${proj.description ? `<p class="text-xs text-slate-600 mt-1 leading-relaxed">${proj.description}</p>` : ''}
     `);
 
     fillCards(record.education, formFields.education, "Chưa có dữ liệu học vấn", (edu) => `
-        <div class="font-bold text-yody-ink text-sm">${edu.institution || "Trường?"}</div>
-        <div class="text-xs text-yody-indigo font-medium mt-0.5">${edu.degree ? edu.degree + " - " : ""}${edu.fieldOfStudy || "Chuyên ngành?"}</div>
-        <div class="text-xs text-yody-muted mt-1 font-medium">${edu.startDate || "?"} - ${edu.endDate || "?"}</div>
+        <div class="font-bold text-slate-900 text-sm font-display">${edu.institution || "Trường?"}</div>
+        <div class="text-xs text-[#2a2b86] font-medium mt-0.5">${edu.degree ? edu.degree + " - " : ""}${edu.fieldOfStudy || "Chuyên ngành?"}</div>
+        <div class="text-xs text-slate-400 mt-1 font-mono">${edu.startDate || "?"} - ${edu.endDate || "?"}</div>
     `);
 
     fillCards(record.certifications, formFields.certifications, "Chưa có dữ liệu chứng chỉ", (cert) => `
-        <div class="font-bold text-yody-ink text-sm">${cert.name || "Tên chứng chỉ?"}</div>
-        <div class="text-xs text-yody-indigo font-medium mt-0.5">${cert.issuer || "Đơn vị cấp?"} | ${cert.issueDate || "?"}</div>
+        <div class="font-bold text-slate-900 text-sm font-display">${cert.name || "Tên chứng chỉ?"}</div>
+        <div class="text-xs text-[#2a2b86] font-medium mt-0.5">${cert.issuer || "Đơn vị cấp?"} | ${cert.issueDate || "?"}</div>
     `);
 }
 
-// Các mẫu JD tiêu chuẩn dùng cho kiểm thử
+// JD Mẫu kiểm thử
 const JDTemplates = {
     pass: `Vị trí: JUNIOR / ASSOCIATE FRONTEND ENGINEER (REACT / TYPESCRIPT / FIREBASE)
 
@@ -240,6 +257,7 @@ document.querySelectorAll('.jd-template-btn').forEach(btn => {
     });
 });
 
+// Chấm điểm độ phù hợp JD
 document.getElementById('matchBtn').addEventListener('click', async () => {
     const jdText = document.getElementById('jdInput').value.trim();
     if (!jdText) {
@@ -253,7 +271,7 @@ document.getElementById('matchBtn').addEventListener('click', async () => {
 
     const btn = document.getElementById('matchBtn');
     btn.disabled = true;
-    btn.innerHTML = '<span>Đang phân tích độ phù hợp...</span>';
+    btn.innerHTML = '<span>Đang phân tích...</span>';
 
     try {
         const response = await fetch(`http://localhost:3000/api/match-jd`, {
@@ -280,9 +298,9 @@ document.getElementById('matchBtn').addEventListener('click', async () => {
         
         const badge = document.getElementById('recommendationBadge');
         badge.textContent = matchResult.recommendation;
-        if (score >= 80) badge.className = "mt-4 px-4 py-1.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 text-center border border-emerald-200";
-        else if (score >= 50) badge.className = "mt-4 px-4 py-1.5 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 text-center border border-amber-200";
-        else badge.className = "mt-4 px-4 py-1.5 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 text-center border border-rose-200";
+        if (score >= 80) badge.className = "conf-badge conf-high mt-2.5 text-center";
+        else if (score >= 50) badge.className = "conf-badge conf-med mt-2.5 text-center";
+        else badge.className = "conf-badge conf-low mt-2.5 text-center";
 
         const prosList = document.getElementById('prosList');
         prosList.innerHTML = (matchResult.pros || []).map(p => `<li class="flex items-start gap-2"><span class="text-emerald-600 font-bold">✓</span> <span>${p}</span></li>`).join('');
@@ -297,29 +315,3 @@ document.getElementById('matchBtn').addEventListener('click', async () => {
         btn.innerHTML = '<span>Chấm điểm độ phù hợp</span>';
     }
 });
-
-const tabCv = document.getElementById('tab-cv');
-const tabJd = document.getElementById('tab-jd');
-const contentCv = document.getElementById('content-cv');
-const contentJd = document.getElementById('content-jd');
-const tabDescription = document.getElementById('tabDescription');
-
-// Chuyển đổi giữa các tab chức năng
-function switchTab(tabName) {
-    if (tabName === 'cv') {
-        tabCv.className = "border-yody-indigo text-yody-indigo whitespace-nowrap py-3.5 px-1 border-b-2 font-bold text-base fill-transition flex items-center gap-2";
-        tabJd.className = "border-transparent text-yody-muted hover:text-yody-ink hover:border-yody-hairline whitespace-nowrap py-3.5 px-1 border-b-2 font-bold text-base fill-transition flex items-center gap-2";
-        contentCv.classList.remove('hidden');
-        contentJd.classList.add('hidden');
-        tabDescription.textContent = "Các thông tin dưới đây được AI tự động trích xuất và chuẩn hóa từ CV.";
-    } else {
-        tabJd.className = "border-yody-indigo text-yody-indigo whitespace-nowrap py-3.5 px-1 border-b-2 font-bold text-base fill-transition flex items-center gap-2";
-        tabCv.className = "border-transparent text-yody-muted hover:text-yody-ink hover:border-yody-hairline whitespace-nowrap py-3.5 px-1 border-b-2 font-bold text-base fill-transition flex items-center gap-2";
-        contentJd.classList.remove('hidden');
-        contentCv.classList.add('hidden');
-        tabDescription.textContent = "Đánh giá mức độ đáp ứng của ứng viên so với Yêu cầu công việc (JD).";
-    }
-}
-
-tabCv.addEventListener('click', () => switchTab('cv'));
-tabJd.addEventListener('click', () => switchTab('jd'));

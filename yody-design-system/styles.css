@@ -1,0 +1,27 @@
+/* ════════════════════════════════════════════════════════════════════
+   YODY Design System · styles.css
+   ────────────────────────────────────────────────────────────────────
+   Root entry — link THIS one file to get the full token foundation
+   (brand · accents · status · surfaces · type scale · motion · a11y)
+   plus the self-hosted Be Vietnam Pro @font-face set and the four
+   surface adapters ([data-surface="marketing|app|portal|store"]).
+
+   This is the single source of truth for tokens. The Tailwind v4 layer
+   and component CSS live alongside it and are loaded per build target:
+
+     · Build (Vite/PostCSS) → import  tailwind/globals.css  as the theme
+       entry (shadcn role tokens + @theme inline + @layer base + .dark).
+     · No-build CDN        → inline  tailwind/yody.components.css  inside
+       a <style type="text/tailwindcss"> block.
+     · Composite blocks    → link the kits on demand:
+         ui_kits/yody-app/index.css   · ui_kits/yody-ai/index.css
+         ui_kits/yody-collab/index.css · ui_kits/yody-fashion/index.css
+
+   These are intentionally NOT @import-ed here: globals.css /
+   yody.components.css pull in Tailwind via bare `@import "tailwindcss"`
+   (resolved by the build tool, not a plain CSS loader), and the kits are
+   load-on-demand. Keeping styles.css token-only makes it safe to link
+   anywhere — even without a Tailwind toolchain.
+   ════════════════════════════════════════════════════════════════════ */
+
+@import "colors_and_type.css";

@@ -1,0 +1,55 @@
+<!-- @dsCard group="Components" name="Tabs" subtitle="Triggers + active state · panels" viewport="820x380" -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tabs · shadcn · YODY Design System</title>
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+@import "tailwindcss";
+@theme inline {
+  --color-background: var(--bg); --color-foreground: var(--fg-1);
+  --color-card: var(--bg); --color-card-foreground: var(--fg-1);
+  --color-popover: var(--bg); --color-popover-foreground: var(--fg-1);
+  --color-primary: var(--brand); --color-primary-foreground: #ffffff;
+  --color-secondary: var(--bg-2); --color-secondary-foreground: var(--fg-1);
+  --color-muted: var(--bg-muted); --color-muted-foreground: var(--fg-3);
+  --color-accent: var(--iris); --color-accent-foreground: #ffffff;
+  --color-destructive: var(--gap); --color-destructive-foreground: #ffffff;
+  --color-border: var(--border); --color-input: var(--border); --color-ring: var(--iris);
+  --font-sans: var(--font-body); --font-mono: var(--font-mono);
+  --radius: var(--radius-md); --radius-sm: var(--radius-sm); --radius-md: var(--radius-md); --radius-lg: var(--radius-lg); --radius-xl: var(--radius-xl);
+  --radius-pill: var(--radius-pill); --shadow-sm: var(--shadow-sm); --shadow-md: var(--shadow-md);
+}
+</style>
+<style>
+  body { background: var(--bg-2); color: var(--fg-1); font-family: var(--font-body); margin: 0; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 44px 40px 64px; }
+  .page-head { display:flex; align-items:baseline; justify-content:space-between; gap:24px; padding-bottom:16px; margin-bottom:32px; border-bottom:1px solid var(--border); }
+  .page-head h1 { font: 800 28px/1.1 var(--font-impact, var(--font-body)); letter-spacing:-0.02em; margin:0; }
+  .page-head .meta { font: 700 11px/1 var(--font-mono); color: var(--brand); letter-spacing:0.26em; text-transform:uppercase; white-space:nowrap; }
+  .preview { display:flex; flex-wrap:wrap; gap:28px 40px; align-items:flex-start; padding:36px 32px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
+  .col { display:flex; flex-direction:column; gap:14px; }
+  .lbl { font:600 11px/1 var(--font-mono); letter-spacing:0.14em; text-transform:uppercase; color:var(--fg-3); }
+  .row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+</style>
+</head>
+<body data-surface="app">
+<div class="wrap">
+  <div class="page-head"><h1>Tabs</h1><span class="meta">shadcn · registry/ui</span></div>
+  <div class="preview">
+<div class="col"><span class="lbl">Default</span>
+  <div class="w-96">
+    <div class="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground gap-1">
+      <span class="inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium bg-background text-foreground shadow-sm">Tổng quan</span>
+      <span class="inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium">Đơn hàng</span>
+      <span class="inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium">Tồn kho</span>
+    </div>
+    <div class="mt-3 rounded-lg border border-border p-4 text-sm text-muted-foreground">Bảng tổng quan doanh thu, đơn và tồn theo cửa hàng.</div>
+  </div>
+</div>  </div>
+</div>
+</body>
+</html>

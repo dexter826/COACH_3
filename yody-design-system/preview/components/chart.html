@@ -1,0 +1,61 @@
+<!-- @dsCard group="Components" name="Chart" subtitle="recharts wrapper · palette = chart-1..5 (YODY accents)" viewport="860x480" -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chart · shadcn · YODY Design System</title>
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+@import "tailwindcss";
+@theme inline {
+  --color-background: var(--bg); --color-foreground: var(--fg-1);
+  --color-card: var(--bg); --color-card-foreground: var(--fg-1);
+  --color-popover: var(--bg); --color-popover-foreground: var(--fg-1);
+  --color-primary: var(--brand); --color-primary-foreground: #ffffff;
+  --color-secondary: var(--bg-2); --color-secondary-foreground: var(--fg-1);
+  --color-muted: var(--bg-muted); --color-muted-foreground: var(--fg-3);
+  --color-accent: var(--iris); --color-accent-foreground: #ffffff;
+  --color-destructive: var(--gap); --color-destructive-foreground: #ffffff;
+  --color-border: var(--border); --color-input: var(--border); --color-ring: var(--iris);
+  --color-chart-1: var(--iris); --color-chart-2: var(--mint); --color-chart-3: var(--brand); --color-chart-4: var(--gold); --color-chart-5: var(--rose);
+  --font-sans: var(--font-body); --font-mono: var(--font-mono);
+  --radius: var(--radius-md); --radius-sm: var(--radius-sm); --radius-md: var(--radius-md); --radius-lg: var(--radius-lg); --radius-xl: var(--radius-xl);
+  --shadow-sm: var(--shadow-sm); --shadow-md: var(--shadow-md); --shadow-lg: var(--shadow-lg);
+}
+</style>
+<style>
+  body { background: var(--bg-2); color: var(--fg-1); font-family: var(--font-body); margin: 0; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 44px 40px 64px; }
+  .page-head { display:flex; align-items:baseline; justify-content:space-between; gap:24px; padding-bottom:16px; margin-bottom:32px; border-bottom:1px solid var(--border); }
+  .page-head h1 { font: 800 28px/1.1 var(--font-impact, var(--font-body)); letter-spacing:-0.02em; margin:0; }
+  .page-head .meta { font: 700 11px/1 var(--font-mono); color: var(--brand); letter-spacing:0.26em; text-transform:uppercase; white-space:nowrap; }
+  .page-head .note { font: 500 11px/1.4 var(--font-mono); color: var(--fg-3); }
+  .preview { display:flex; flex-wrap:wrap; gap:28px 44px; align-items:flex-start; padding:36px 32px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
+  .col { display:flex; flex-direction:column; gap:14px; }
+  .lbl { font:600 11px/1 var(--font-mono); letter-spacing:0.14em; text-transform:uppercase; color:var(--fg-3); }
+  .row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+</style>
+</head>
+<body data-surface="app">
+<div class="wrap">
+  <div class="page-head"><h1>Chart</h1><span class="meta">shadcn · registry/ui</span></div>
+  <div class="preview">
+<div class="col"><span class="lbl">Bar · doanh thu 6 tháng</span>
+  <div class="w-96 rounded-lg border border-border bg-background p-4">
+    <div class="flex h-40 items-end gap-3">
+      <div class="flex-1 rounded-t-sm" style="height:55%;background:var(--chart-3,var(--brand))"></div>
+      <div class="flex-1 rounded-t-sm" style="height:70%;background:var(--chart-3,var(--brand))"></div>
+      <div class="flex-1 rounded-t-sm" style="height:48%;background:var(--chart-3,var(--brand))"></div>
+      <div class="flex-1 rounded-t-sm" style="height:85%;background:var(--chart-1,var(--iris))"></div>
+      <div class="flex-1 rounded-t-sm" style="height:62%;background:var(--chart-3,var(--brand))"></div>
+      <div class="flex-1 rounded-t-sm" style="height:95%;background:var(--chart-1,var(--iris))"></div>
+    </div>
+    <div class="mt-2 flex gap-3 text-xs text-muted-foreground"><span>T1</span><span class="flex-1"></span><span>T6</span></div>
+    <div class="mt-2 flex items-center gap-4 text-xs"><span class="flex items-center gap-1.5"><span class="size-2 rounded-[2px]" style="background:var(--brand)"></span>Thực tế</span><span class="flex items-center gap-1.5"><span class="size-2 rounded-[2px]" style="background:var(--iris)"></span>Kỷ lục</span></div>
+  </div>
+</div>  </div>
+</div>
+</body>
+</html>

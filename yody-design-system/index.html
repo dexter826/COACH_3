@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>YODY Design System — Bắt đầu</title>
+<link rel="icon" href="assets/yody-logo-icon.png" />
+<link rel="stylesheet" href="colors_and_type.css" />
+<style>
+  html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+  body { background: var(--bg); }
+  a { color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+
+  /* ── top nav ── */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(252,252,255,0.82); backdrop-filter: blur(14px) saturate(1.3);
+    border-bottom: 1px solid var(--border-light);
+  }
+  .nav-in { max-width: 1120px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; gap: 14px; }
+  .nav-mark { width: 34px; height: 34px; border-radius: var(--radius-sm); display: block; }
+  .nav-name { font: 700 16px/1 var(--font-body); color: var(--fg-1); letter-spacing: -0.01em; white-space: nowrap; }
+  .nav-name span { color: var(--fg-3); font-weight: 500; }
+  .nav-links { margin-left: auto; display: flex; gap: 26px; align-items: center; }
+  .nav-links a { font: 500 14px/1 var(--font-body); color: var(--fg-2); text-decoration: none; transition: color var(--dur-fast); }
+  .nav-links a:hover { color: var(--brand); }
+  .nav-links .nav-cta { font: 600 13px/1 var(--font-mono); color: var(--brand); border: 1px solid var(--border); padding: 9px 14px; border-radius: var(--radius-pill); }
+  .nav-links .nav-cta:hover { background: var(--brand-tint); border-color: var(--border-hover); }
+  @media (max-width: 760px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+  /* ── hero ── */
+  .hero { padding: 88px 0 72px; }
+  .hero-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: center; }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .hero h1 { font: var(--type-h1); letter-spacing: -0.025em; margin: 18px 0 0; color: var(--fg-1); text-wrap: balance; }
+  .hero h1 em { font: italic 800 1em/1 var(--font-impact); color: var(--iris); font-style: italic; }
+  .hero .lede { font: var(--type-body-lg); color: var(--fg-2); margin: 22px 0 0; max-width: 560px; }
+  .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 34px; }
+  .brand-block {
+    background: var(--gold); border-radius: var(--radius-lg);
+    padding: 40px; display: grid; place-items: center; box-shadow: var(--shadow-gold);
+  }
+  .brand-block img { width: 100%; max-width: 320px; height: auto; display: block; }
+
+  /* ── section frame ── */
+  section.band { padding: 72px 0; border-top: 1px solid var(--border-light); }
+  section.band.mist { background: var(--bg-2); }
+  .sec-head { margin-bottom: 44px; max-width: 760px; }
+  .sec-head h2 { font: var(--type-h2); letter-spacing: -0.02em; margin: 14px 0 0; color: var(--fg-1); }
+  .sec-head p { font: var(--type-body); color: var(--fg-2); margin: 14px 0 0; }
+
+  .grid { display: grid; gap: 18px; }
+  .grid > * { min-width: 0; }
+  .g2 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .g3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .g4 { grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 900px) { .g4 { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 760px) { .g2, .g3 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 26px; box-shadow: var(--shadow-sm); }
+  .card .k { font: 700 11px/1 var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; }
+  .card h3 { font: 700 19px/1.25 var(--font-body); color: var(--fg-1); margin: 12px 0 0; letter-spacing: -0.01em; }
+  .card p { font: 400 15px/1.55 var(--font-body); color: var(--fg-2); margin: 10px 0 0; }
+  .card .meta { font: var(--type-mono); color: var(--fg-3); margin-top: 14px; display: flex; flex-direction: column; gap: 4px; }
+  .card .meta b { color: var(--fg-1); font-weight: 600; }
+  .card-top { display: flex; align-items: center; gap: 10px; }
+  .swatch-bar { height: 4px; border-radius: 999px; margin-bottom: 18px; }
+
+  /* ── start guide ── */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+  .step { display: flex; gap: 16px; align-items: flex-start; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px; box-shadow: var(--shadow-sm); }
+  .step .roman { font: var(--type-roman); font-size: 38px; line-height: 0.8; flex: none; }
+  .step h3 { font: 700 17px/1.25 var(--font-body); color: var(--fg-1); margin: 2px 0 0; letter-spacing: -0.01em; }
+  .step p { font: 400 14px/1.55 var(--font-body); color: var(--fg-2); margin: 8px 0 0; }
+  .ref { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .ref li { font: 400 14px/1.45 var(--font-body); color: var(--fg-2); padding-left: 18px; position: relative; }
+  .ref li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 2px; background: var(--iris); }
+  .ref.check li::before { content: '✓'; font: 800 12px/1 var(--font-body); color: var(--mint-deep); background: none; width: auto; height: auto; top: 1px; border-radius: 0; }
+  .ref code, .step code, .start-foot code { font: 600 12.5px/1.35 var(--font-mono); color: var(--brand); background: var(--brand-tint); padding: 1px 5px; border-radius: 5px; }
+  .start-foot { margin: 26px 0 0; font: var(--type-body-sm); color: var(--fg-3); }
+  .start-foot a { color: var(--iris-deep); font-weight: 600; text-decoration: none; }
+  .start-foot a:hover { text-decoration: underline; }
+
+  /* ── architecture layers ── */
+  .layer { display: grid; grid-template-columns: 96px 1fr; gap: 24px; align-items: start; padding: 26px 0; border-bottom: 1px solid var(--border-light); }
+  .layer:last-child { border-bottom: 0; }
+  .layer .roman { font: var(--type-roman); font-size: 64px; line-height: 0.8; }
+  .layer h3 { font: 700 22px/1.2 var(--font-body); color: var(--fg-1); margin: 0; letter-spacing: -0.012em; }
+  .layer p { font: var(--type-body); color: var(--fg-2); margin: 10px 0 0; max-width: 680px; }
+  .layer code { font: 600 14px/1 var(--font-mono); color: var(--brand); background: var(--brand-tint); padding: 2px 7px; border-radius: 5px; }
+  @media (max-width: 640px) { .layer { grid-template-columns: 1fr; gap: 8px; } .layer .roman { font-size: 48px; } }
+
+  /* ── code blocks ── */
+  pre { margin: 0; background: var(--bg-ink); color: #e7e8f5; border-radius: var(--radius); padding: 20px 22px; overflow-x: auto; font: 500 13px/1.65 var(--font-mono); }
+  pre .c { color: #8b8da8; }
+  pre .t { color: #b9aef9; }
+  pre .s { color: #6ee7b7; }
+
+  /* ── color cheat ── */
+  .swatches { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (min-width: 760px) { .swatches { grid-template-columns: repeat(3, 1fr); } }
+  .sw { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg); }
+  .sw .chip { height: 64px; }
+  .sw .body { padding: 12px 14px; }
+  .sw .name { font: 700 14px/1.2 var(--font-body); color: var(--fg-1); }
+  .sw .tok { font: 600 12px/1.4 var(--font-mono); color: var(--fg-3); }
+  .sw .use { font: 400 12px/1.45 var(--font-body); color: var(--fg-2); margin-top: 6px; }
+
+  /* ── type stack ── */
+  .type-row { display: grid; grid-template-columns: 200px 1fr; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--border-light); align-items: baseline; }
+  .type-row:last-child { border-bottom: 0; }
+  .type-row .fam { font: 700 15px/1.3 var(--font-body); color: var(--fg-1); }
+  .type-row .fam small { display: block; font: var(--type-mono); color: var(--fg-3); margin-top: 4px; font-weight: 500; }
+  .type-row .spec { color: var(--fg-2); }
+  @media (max-width: 640px) { .type-row { grid-template-columns: 1fr; gap: 6px; } }
+
+  /* ── rules ── */
+  .rules { display: grid; gap: 12px; }
+  @media (min-width: 760px) { .rules { grid-template-columns: 1fr 1fr; } }
+  .rule { display: flex; gap: 14px; padding: 18px 20px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); }
+  .rule .n { font: 800 15px/1 var(--font-numeric); color: var(--brand); flex: none; width: 22px; }
+  .rule div p { margin: 0; }
+  .rule .t { font: 600 15px/1.35 var(--font-body); color: var(--fg-1); }
+  .rule .d { font: 400 14px/1.5 var(--font-body); color: var(--fg-2); margin-top: 4px; }
+
+  /* ── explore hub ── */
+  .hub { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 760px) { .hub { grid-template-columns: repeat(2, 1fr); } }
+  .hub-col h3 { font: 700 12px/1 var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-3); margin: 0 0 14px; }
+  .links { display: flex; flex-direction: column; gap: 2px; }
+  .lnk { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm); text-decoration: none; transition: background var(--dur-fast); border: 1px solid transparent; }
+  .lnk:hover { background: var(--bg); border-color: var(--border); }
+  .lnk .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .lnk .nm { font: 500 15px/1.3 var(--font-body); color: var(--fg-1); flex: 1; }
+  .lnk .ar { font: var(--type-mono); color: var(--fg-3); }
+  .lnk .nm small { color: var(--fg-3); font-weight: 400; }
+
+  /* compact pill nav — for columns with many specimens (components, foundations, blocks) */
+  .hub-col.wide { grid-column: 1 / -1; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill-lnk { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); text-decoration: none; transition: background var(--dur-fast), border-color var(--dur-fast); }
+  .pill-lnk:hover { background: var(--bg-2); border-color: var(--border-hover); }
+  .pill-lnk .pdot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+  .pill-lnk .pnm { font: 500 13px/1 var(--font-body); color: var(--fg-1); white-space: nowrap; }
+
+  footer { padding: 56px 0 72px; border-top: 1px solid var(--border-light); }
+  footer .ft { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: center; }
+  footer .ft .mono { color: var(--fg-3); }
+</style>
+</head>
+<body data-surface="portal">
+
+<nav class="nav">
+  <div class="nav-in">
+    <img class="nav-mark" src="assets/yody-logo-icon.png" alt="YODY" />
+    <div class="nav-name">YODY <span>Design System</span></div>
+    <div class="nav-links">
+      <a href="#surfaces">Bề mặt</a>
+      <a href="#architecture">Kiến trúc</a>
+      <a href="#start">Bắt đầu</a>
+      <a href="#explore">Khám phá</a>
+      <a class="nav-cta" href="DESIGN.md">DESIGN.md</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="s-eyebrow">Design system · v3</span>
+      <h1>Một hệ token, <em>bốn</em> bề mặt — một thương hiệu.</h1>
+      <p class="lede">Nền tảng nhận diện và thư viện component cho YODY, thời trang Việt. Cùng một bộ token phục vụ marketing, ứng dụng nội bộ, portal báo cáo và cửa hàng — chuẩn Tailwind v4, shadcn.</p>
+      <div class="hero-cta">
+        <a class="cta cta-primary" href="#start">Bắt đầu nhanh</a>
+        <a class="cta cta-secondary" href="#explore">Khám phá specimen</a>
+      </div>
+    </div>
+    <div class="brand-block">
+      <img src="assets/yody-logo.png" alt="Logo YODY" />
+    </div>
+  </div>
+</header>
+
+<!-- SURFACES -->
+<section class="band mist" id="surfaces">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="s-eyebrow iris">Bốn bề mặt</span>
+      <h2>Một nền tảng, bốn ngữ cảnh sử dụng.</h2>
+      <p>Token nền là chung cho mọi nơi. Mỗi bề mặt chỉ điều chỉnh <em class="em-accent">tỷ lệ</em>: cỡ chữ, mật độ, ngân sách chuyển động và tần suất màu. Khai báo bằng <code style="font:600 14px/1 var(--font-mono);color:var(--brand);background:var(--brand-tint);padding:2px 7px;border-radius:5px;">data-surface</code> trên thẻ bao.</p>
+    </div>
+    <div class="grid g4">
+      <div class="card">
+        <div class="swatch-bar" style="background:var(--rose)"></div>
+        <div class="k" style="color:var(--rose-deep)">Marketing</div>
+        <h3>Trang đích & thương hiệu</h3>
+        <p>Landing yody.vn, tuyển dụng, câu chuyện thương hiệu, chiến dịch.</p>
+        <div class="meta"><span>Body <b>18px / 1.6</b></span><span>Motion <b>rich</b></span><span>Accent <b>bold</b></span></div>
+      </div>
+      <div class="card">
+        <div class="swatch-bar" style="background:var(--iris)"></div>
+        <div class="k" style="color:var(--iris-deep)">App</div>
+        <h3>Ứng dụng nội bộ</h3>
+        <p>Back-office, dashboard, vendor portal, mobile nội bộ — dày & nhanh.</p>
+        <div class="meta"><span>Body <b>14px / 1.5</b></span><span>Motion <b>instant</b></span><span>Accent <b>signal</b></span></div>
+      </div>
+      <div class="card">
+        <div class="swatch-bar" style="background:var(--gold)"></div>
+        <div class="k" style="color:var(--gold-deep)">Portal</div>
+        <h3>Briefing & báo cáo</h3>
+        <p>Báo cáo điều hành, microsite nội bộ. Đọc lướt, kể chuyện. Mặc định.</p>
+        <div class="meta"><span>Body <b>18px / 1.7</b></span><span>Motion <b>1 ambient</b></span><span>Accent <b>narrative</b></span></div>
+      </div>
+      <div class="card">
+        <div class="swatch-bar" style="background:var(--mint)"></div>
+        <div class="k" style="color:var(--mint-deep)">Store</div>
+        <h3>POS & biển hiệu</h3>
+        <p>Màn hình bán hàng, signage, tablet phòng thử. Tương phản cao, chạm lớn.</p>
+        <div class="meta"><span>Body <b>18px / 1.45</b></span><span>Tap <b>≥ 56px</b></span><span>Accent <b>contrast</b></span></div>
+      </div>
+    </div>
+    <div class="insight">
+      <div class="insight-label">Kết luận</div>
+      <div class="insight-body">Bỏ <code style="font:600 14px/1 var(--font-mono);color:var(--iris-deep);background:var(--iris-tint);padding:2px 6px;border-radius:5px;">data-surface</code> thì mặc định là <em>portal</em>. Component không bao giờ hard-code cỡ chữ hay gutter — chúng đọc token mà bề mặt phân giải.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section class="band" id="architecture">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="s-eyebrow">Kiến trúc</span>
+      <h2>Ba lớp, từ nền bất biến đến component.</h2>
+    </div>
+    <div class="layer">
+      <span class="roman iris">I</span>
+      <div>
+        <h3>Foundation — token nền</h3>
+        <p>Màu thương hiệu, accent ngữ nghĩa, palette trạng thái, họ chữ, easing, sàn a11y. Sống trong <code>:root</code> của <code>colors_and_type.css</code>. Phổ quát, không bao giờ bị bề mặt ghi đè.</p>
+      </div>
+    </div>
+    <div class="layer">
+      <span class="roman mint">II</span>
+      <div>
+        <h3>Surface adapters — bốn bộ tỷ lệ</h3>
+        <p>Mỗi <code>[data-surface="…"]</code> phân giải tỷ lệ riêng: type-size, gutter, row-height, motion-budget, accent-freq. Chỉ token <em class="em-accent mint">tỷ lệ</em> thay đổi theo bề mặt.</p>
+      </div>
+    </div>
+    <div class="layer">
+      <span class="roman gold">III</span>
+      <div>
+        <h3>UI kits — component tổ hợp</h3>
+        <p>Khối dựng sẵn theo nhu cầu: <code>yody-app</code>, <code>yody-ai</code>, <code>yody-collab</code> (cross-product) và <code>yody-fashion</code> (theo ngành). Tiêu thụ token từ adapter, không định nghĩa lại nền.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- START -->
+<section class="band mist" id="start">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="s-eyebrow iris">Bắt đầu nhanh</span>
+      <h2>Dựng một màn hình YODY trong vài phút.</h2>
+      <p>Quy tắc vàng: luôn nạp <b>token</b> trước, đặt <b>data-surface</b>, rồi mới tới lớp component. Đủ để một frontend dev bắt đầu mà chưa cần đọc hết DESIGN.md.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <span class="roman iris">I</span>
+        <div>
+          <h3>Nạp token nền</h3>
+          <p><code>colors_and_type.css</code> — bắt buộc, luôn đầu tiên. Chứa toàn bộ biến màu, chữ, spacing, motion và sàn a11y.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="roman mint">II</span>
+        <div>
+          <h3>Đặt data-surface</h3>
+          <p>Trên <code>&lt;body&gt;</code> hoặc container: <code>marketing</code> · <code>app</code> · <code>portal</code> · <code>store</code>. Thiếu nó = mặc định portal. Component đọc tỷ lệ từ đây.</p>
+        </div>
+      </div>
+      <div class="step">
+        <span class="roman gold">III</span>
+        <div>
+          <h3>Chọn lớp component</h3>
+          <p>React → cài qua shadcn <code>@yody/*</code>. Không React → nạp lớp Tailwind + <code>ui_kits/*</code> rồi dùng class ngữ nghĩa.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:22px">
+      <div class="card">
+        <div class="card-top"><span class="tag tag-build">React</span><h3 style="margin:0">Vite / Next + Tailwind v4</h3></div>
+        <p>Nạp token + theme một lần ở entry, rồi cài component. Item upstream tự lên màu YODY vì theme đã map role token.</p>
+        <pre style="margin-top:16px"><span class="c">// 1 · entry (main.tsx) — nạp một lần, đúng thứ tự</span>
+import <span class="s">"./colors_and_type.css"</span>;  <span class="c">// token nền</span>
+import <span class="s">"./globals.css"</span>;          <span class="c">// role token + .dark</span>
+
+<span class="c"># 2 · trỏ shadcn vào registry @yody (components.json)</span>
+<span class="t">"registries"</span>: { <span class="s">"@yody"</span>: <span class="s">"https://HOST/r/{name}.json"</span> }
+
+<span class="c"># 3 · cài component — namespace, URL, hoặc upstream</span>
+npx shadcn add <span class="s">@yody/button</span> <span class="s">@yody/select</span>
+npx shadcn add <span class="s">tooltip popover</span>   <span class="c"># tự brand</span></pre>
+      </div>
+      <div class="card">
+        <div class="card-top"><span class="tag tag-plan">Non-React</span><h3 style="margin:0">Server-render · HTML · Vue</h3></div>
+        <p>Nạp token → lớp Tailwind → <code>ui_kits/*</code> (khi cần). Rồi dùng class ngữ nghĩa hoặc role/utility trực tiếp.</p>
+        <pre style="margin-top:16px"><span class="c">&lt;!-- thứ tự nạp cố định --&gt;</span>
+&lt;link rel=<span class="s">"stylesheet"</span> href=<span class="s">"colors_and_type.css"</span>&gt;
+&lt;link rel=<span class="s">"stylesheet"</span> href=<span class="s">"tailwind/yody.components.css"</span>&gt;
+&lt;link rel=<span class="s">"stylesheet"</span> href=<span class="s">"ui_kits/yody-app/index.css"</span>&gt;
+
+&lt;body data-surface=<span class="s">"app"</span>&gt;
+  &lt;button class=<span class="s">"btn btn-primary"</span>&gt;Lưu&lt;/button&gt;
+  &lt;span class=<span class="s">"tag tag-live"</span>&gt;LIVE&lt;/span&gt;
+&lt;/body&gt;</pre>
+      </div>
+    </div>
+
+    <div class="grid g3" style="margin-top:22px">
+      <div class="card">
+        <div class="k" style="color:var(--iris-deep)">Token hay dùng</div>
+        <ul class="ref">
+          <li>Nền/CTA: <code>bg-primary</code> · <code>bg-brand</code></li>
+          <li>Chữ: <code>text-foreground</code> · <code>text-muted-foreground</code></li>
+          <li>Accent: <code>--iris</code> <code>--gold</code> <code>--mint</code> <code>--rose</code></li>
+          <li>Type: <code>text-h1</code> … <code>text-body</code> <code>text-eyebrow</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="k" style="color:var(--gold-deep)">Dùng UI kit nào?</div>
+        <ul class="ref">
+          <li><code>yody-app</code> — shell, table, filter, chart</li>
+          <li><code>yody-ai</code> — composer, halo, confidence, panel</li>
+          <li><code>yody-collab</code> — comment, approval, presence</li>
+          <li><code>yody-fashion</code> — swatch, BOM, size matrix</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="k" style="color:var(--mint-deep)">Đừng quên</div>
+        <ul class="ref check">
+          <li>Token, không hard-code hex</li>
+          <li><code>data-surface</code> đúng ngữ cảnh</li>
+          <li>Type scale, không <code>text-[Npx]</code></li>
+          <li>Focus ring + vùng chạm ≥ 44px</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="start-foot">Tham chiếu đầy đủ: <a href="DESIGN.md">DESIGN.md</a> · skill agent <a href="SKILL.md">SKILL.md</a> · specimen sống trong <code>preview/</code> · component cài được trong <code>public/r/</code>.</p>
+  </div>
+</section>
+
+<!-- COLORS -->
+<section class="band" id="colors">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="s-eyebrow rose">Bảng màu</span>
+      <h2>Navy là mỏ neo, accent mang ngữ nghĩa.</h2>
+      <p>Dùng qua token, không bao giờ hard-code hex. Tối đa 2 accent mỗi khu vực.</p>
+    </div>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#2a2b86"></div><div class="body"><div class="name">Brand — Navy</div><div class="tok">--brand · #2a2b86</div><div class="use">CTA chính, nav active, nhấn tiêu đề, status BUILD.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#7c6cf5"></div><div class="body"><div class="name">Iris</div><div class="tok">--iris · #7c6cf5</div><div class="use">Mặc định AI/tech, 90% bề mặt accent, banner info.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#fcaf16"></div><div class="body"><div class="name">Gold</div><div class="tok">--gold · #fcaf16</div><div class="use">Chỉ trang trí — logo, một điểm nhấn/trang. Không cho chữ/nút.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#10b981"></div><div class="body"><div class="name">Mint</div><div class="tok">--mint · #10b981</div><div class="use">Tăng trưởng, trạng thái LIVE, phê duyệt, thành công.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#f472b6"></div><div class="body"><div class="name">Rose</div><div class="tok">--rose · #f472b6</div><div class="use">Con người / xã hội, ESG, trạng thái REVIEW.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#ef4444"></div><div class="body"><div class="name">Crimson</div><div class="tok">--gap · #ef4444</div><div class="use">Chỉ cảnh báo — destructive, REJECTED.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TYPE -->
+<section class="band mist" id="type">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="s-eyebrow">Bộ chữ</span>
+      <h2>Bốn họ chữ, không hơn.</h2>
+    </div>
+    <div class="type-row">
+      <div class="fam">Be Vietnam Pro<small>--font-body</small></div>
+      <div class="spec" style="font:500 30px/1.2 var(--font-body)">Body, brand chrome, tiêu đề app — hỗ trợ dấu tiếng Việt.</div>
+    </div>
+    <div class="type-row">
+      <div class="fam">Montserrat<small>--font-impact</small></div>
+      <div class="spec" style="font:800 30px/1.2 var(--font-impact);letter-spacing:-0.02em">Hero, display, số liệu (chỉ portal & marketing).</div>
+    </div>
+    <div class="type-row">
+      <div class="fam">Playfair Display<small>--font-serif</small></div>
+      <div class="spec" style="font:italic 700 30px/1.2 var(--font-serif)">Điểm nhấn nghệ thuật — chỉ hero portal, 1 lần/trang.</div>
+    </div>
+    <div class="type-row">
+      <div class="fam">JetBrains Mono<small>--font-mono</small></div>
+      <div class="spec" style="font:500 26px/1.2 var(--font-mono)">Status pill, mã SKU, metadata kỹ thuật, KBD.</div>
+    </div>
+  </div>
+</section>
+
+<!-- RULES -->
+<section class="band" id="rules">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="s-eyebrow gold">Quy tắc bất di bất dịch</span>
+      <h2>Sáu điều giữ bốn bề mặt thành một thương hiệu.</h2>
+    </div>
+    <div class="rules">
+      <div class="rule"><div class="n">1</div><div><p class="t">Khai báo data-surface</p><p class="d">marketing · app · portal · store. Thiếu = tỷ lệ portal.</p></div></div>
+      <div class="rule"><div class="n">2</div><div><p class="t">Dùng token, không dùng hex thô</p><p class="d">Màu, cỡ chữ, gutter đều đọc từ biến — không phát minh màu mới.</p></div></div>
+      <div class="rule"><div class="n">3</div><div><p class="t">Gold chỉ để trang trí</p><p class="d">Logo, một điểm nhấn/trang. Không bao giờ chữ hay nút màu gold.</p></div></div>
+      <div class="rule"><div class="n">4</div><div><p class="t">Không emoji</p><p class="d">Trạng thái thể hiện bằng tag pill (LIVE / BUILD / GAP / PLAN).</p></div></div>
+      <div class="rule"><div class="n">5</div><div><p class="t">Viết thường (sentence case)</p><p class="d">Không chấm than, không sáo ngữ. Ưu tiên tiếng Việt, giữ thuật ngữ tech tiếng Anh.</p></div></div>
+      <div class="rule"><div class="n">6</div><div><p class="t">Sàn a11y</p><p class="d">Focus ring rõ, tap target ≥ 44px (56–72px ở store), tôn trọng reduce-motion.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPLORE -->
+<section class="band mist" id="explore">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="s-eyebrow iris">Khám phá repo</span>
+      <h2>Tài liệu sống, specimen và sản phẩm mẫu.</h2>
+      <p><code style="font:600 14px/1 var(--font-mono);color:var(--brand);background:var(--brand-tint);padding:2px 7px;border-radius:5px;">preview/</code> là specimen của design system. <code style="font:600 14px/1 var(--font-mono);color:var(--brand);background:var(--brand-tint);padding:2px 7px;border-radius:5px;">examples/</code> là sản phẩm tiêu thụ DS (tham khảo, không thuộc DS).</p>
+    </div>
+    <div class="hub">
+      <div class="hub-col wide">
+        <h3>Foundations · 13</h3>
+        <div class="pills">
+          <a class="pill-lnk" href="preview/foundations/colors.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Màu sắc</span></a>
+          <a class="pill-lnk" href="preview/foundations/colors-light-hightech.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Màu · hi-tech</span></a>
+          <a class="pill-lnk" href="preview/foundations/typography.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Typography</span></a>
+          <a class="pill-lnk" href="preview/foundations/type-display.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Type · display</span></a>
+          <a class="pill-lnk" href="preview/foundations/type-body.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Type · body</span></a>
+          <a class="pill-lnk" href="preview/foundations/type-brand.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Type · brand</span></a>
+          <a class="pill-lnk" href="preview/foundations/type-mono.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Type · mono</span></a>
+          <a class="pill-lnk" href="preview/foundations/type-kpi.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Type · KPI</span></a>
+          <a class="pill-lnk" href="preview/foundations/type-mix.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Type · mix</span></a>
+          <a class="pill-lnk" href="preview/foundations/spacing.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Spacing</span></a>
+          <a class="pill-lnk" href="preview/foundations/radii.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Radii</span></a>
+          <a class="pill-lnk" href="preview/foundations/elevation.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Elevation</span></a>
+          <a class="pill-lnk" href="preview/foundations/motion.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Motion</span></a>
+        </div>
+      </div>
+      <div class="hub-col wide">
+        <h3>Components · 47 shadcn + CSS/React specimen</h3>
+        <div class="pills">
+          <a class="pill-lnk" href="preview/components/accordion.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Accordion</span></a>
+          <a class="pill-lnk" href="preview/components/alert.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Alert</span></a>
+          <a class="pill-lnk" href="preview/components/alert-dialog.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Alert dialog</span></a>
+          <a class="pill-lnk" href="preview/components/aspect-ratio.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Aspect ratio</span></a>
+          <a class="pill-lnk" href="preview/components/avatar.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Avatar</span></a>
+          <a class="pill-lnk" href="preview/components/badge.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Badge</span></a>
+          <a class="pill-lnk" href="preview/components/breadcrumb.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Breadcrumb</span></a>
+          <a class="pill-lnk" href="preview/components/button.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Button</span></a>
+          <a class="pill-lnk" href="preview/components/calendar.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Calendar</span></a>
+          <a class="pill-lnk" href="preview/components/card.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Card</span></a>
+          <a class="pill-lnk" href="preview/components/carousel.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Carousel</span></a>
+          <a class="pill-lnk" href="preview/components/chart.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Chart</span></a>
+          <a class="pill-lnk" href="preview/components/checkbox.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Checkbox</span></a>
+          <a class="pill-lnk" href="preview/components/collapsible.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Collapsible</span></a>
+          <a class="pill-lnk" href="preview/components/combobox.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Combobox</span></a>
+          <a class="pill-lnk" href="preview/components/command.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Command</span></a>
+          <a class="pill-lnk" href="preview/components/context-menu.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Context menu</span></a>
+          <a class="pill-lnk" href="preview/components/dialog.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Dialog</span></a>
+          <a class="pill-lnk" href="preview/components/drawer.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Drawer</span></a>
+          <a class="pill-lnk" href="preview/components/dropdown-menu.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Dropdown menu</span></a>
+          <a class="pill-lnk" href="preview/components/hover-card.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Hover card</span></a>
+          <a class="pill-lnk" href="preview/components/input.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Input</span></a>
+          <a class="pill-lnk" href="preview/components/input-otp.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Input OTP</span></a>
+          <a class="pill-lnk" href="preview/components/label.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Label</span></a>
+          <a class="pill-lnk" href="preview/components/menubar.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Menubar</span></a>
+          <a class="pill-lnk" href="preview/components/navigation-menu.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Navigation menu</span></a>
+          <a class="pill-lnk" href="preview/components/pagination.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Pagination</span></a>
+          <a class="pill-lnk" href="preview/components/popover.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Popover</span></a>
+          <a class="pill-lnk" href="preview/components/progress.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Progress</span></a>
+          <a class="pill-lnk" href="preview/components/radio-group.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Radio group</span></a>
+          <a class="pill-lnk" href="preview/components/resizable.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Resizable</span></a>
+          <a class="pill-lnk" href="preview/components/scroll-area.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Scroll area</span></a>
+          <a class="pill-lnk" href="preview/components/select.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Select</span></a>
+          <a class="pill-lnk" href="preview/components/separator.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Separator</span></a>
+          <a class="pill-lnk" href="preview/components/sheet.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Sheet</span></a>
+          <a class="pill-lnk" href="preview/components/skeleton.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Skeleton</span></a>
+          <a class="pill-lnk" href="preview/components/slider.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Slider</span></a>
+          <a class="pill-lnk" href="preview/components/switch.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Switch</span></a>
+          <a class="pill-lnk" href="preview/components/table.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Table</span></a>
+          <a class="pill-lnk" href="preview/components/tabs.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Tabs</span></a>
+          <a class="pill-lnk" href="preview/components/textarea.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Textarea</span></a>
+          <a class="pill-lnk" href="preview/components/toggle.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Toggle</span></a>
+          <a class="pill-lnk" href="preview/components/toggle-group.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Toggle group</span></a>
+          <a class="pill-lnk" href="preview/components/tooltip.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Tooltip</span></a>
+          <a class="pill-lnk" href="preview/components/forms.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Forms (CSS)</span></a>
+          <a class="pill-lnk" href="preview/components/overlays.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">Overlays (CSS)</span></a>
+          <a class="pill-lnk" href="preview/components/state.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">State</span></a>
+          <a class="pill-lnk" href="preview/components/react.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">React · CVA</span></a>
+          <a class="pill-lnk" href="preview/components/react-radix.html"><span class="pdot" style="background:var(--mint)"></span><span class="pnm">React · Radix</span></a>
+        </div>
+      </div>
+      <div class="hub-col wide">
+        <h3>Blocks · 9</h3>
+        <div class="pills">
+          <a class="pill-lnk" href="preview/blocks/app-chrome.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">App chrome</span></a>
+          <a class="pill-lnk" href="preview/blocks/app-data-table.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">App data table</span></a>
+          <a class="pill-lnk" href="preview/blocks/app-charts.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">App charts</span></a>
+          <a class="pill-lnk" href="preview/blocks/data-viz.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Data visualization</span></a>
+          <a class="pill-lnk" href="preview/blocks/kpi-cards.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">KPI cards</span></a>
+          <a class="pill-lnk" href="preview/blocks/header.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Header</span></a>
+          <a class="pill-lnk" href="preview/blocks/ai-vocabulary-v2.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">AI vocabulary v2</span></a>
+          <a class="pill-lnk" href="preview/blocks/collab-components.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Collab</span></a>
+          <a class="pill-lnk" href="preview/blocks/fashion-atoms.html"><span class="pdot" style="background:var(--iris)"></span><span class="pnm">Fashion atoms</span></a>
+        </div>
+      </div>
+      <div class="hub-col">
+        <h3>Brand &amp; tài liệu</h3>
+        <div class="links">
+          <a class="lnk" href="preview/brand/logo-lockups.html"><span class="dot" style="background:var(--gold)"></span><span class="nm">Logo lockups</span><span class="ar">→</span></a>
+          <a class="lnk" href="preview/brand/iconography.html"><span class="dot" style="background:var(--gold)"></span><span class="nm">Iconography</span><span class="ar">→</span></a>
+          <a class="lnk" href="preview/brand/identity.html"><span class="dot" style="background:var(--gold)"></span><span class="nm">Brand identity <small>· áp dụng trong UI</small></span><span class="ar">→</span></a>
+          <a class="lnk" href="DESIGN.md"><span class="dot" style="background:var(--brand)"></span><span class="nm">DESIGN.md <small>· tham chiếu đầy đủ</small></span><span class="ar">→</span></a>
+          <a class="lnk" href="SKILL.md"><span class="dot" style="background:var(--brand)"></span><span class="nm">SKILL.md <small>· skill agent</small></span><span class="ar">→</span></a>
+          <a class="lnk" href="README.md"><span class="dot" style="background:var(--brand)"></span><span class="nm">README.md</span><span class="ar">→</span></a>
+        </div>
+      </div>
+      <div class="hub-col">
+        <h3>Examples — sản phẩm mẫu</h3>
+        <div class="links">
+          <a class="lnk" href="examples/kpi-network/index.html"><span class="dot" style="background:var(--rose)"></span><span class="nm">Mạng lưới KPI <small>· network graph 3.000 node</small></span><span class="ar">→</span></a>
+          <a class="lnk" href="examples/itdx-portal/index.html"><span class="dot" style="background:var(--rose)"></span><span class="nm">ITDX portal <small>· EA briefing</small></span><span class="ar">→</span></a>
+          <a class="lnk" href="examples/plm-screens/style-list.html"><span class="dot" style="background:var(--rose)"></span><span class="nm">PLM screens <small>· 18 màn hình</small></span><span class="ar">→</span></a>
+          <a class="lnk" href="examples/portal-specimens/domain-cards.html"><span class="dot" style="background:var(--rose)"></span><span class="nm">Portal specimens</span><span class="ar">→</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap ft">
+    <div class="nav-name">YODY <span style="color:var(--fg-3);font-weight:500">Design System</span></div>
+    <div class="mono" style="font:var(--type-mono)">Tailwind v4 · shadcn · Be Vietnam Pro · navy #2a2b86</div>
+  </div>
+</footer>
+
+</body>
+</html>

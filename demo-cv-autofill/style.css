@@ -1,95 +1,198 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+/* YODY Design System · CV Auto-fill & 3-Column Studio Layout */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap');
+@import url('../yody-design-system/colors_and_type.css');
+@import url('../yody-design-system/tailwind/yody.components.css');
+@import url('../yody-design-system/ui_kits/yody-ai/vocabulary-v2.css');
 
+/* Cấu hình theme mặc định */
 :root {
-    --canvas-white: #ffffff;
-    --surface-gray: #f3f4f6;
-    --ink-navy: #111928;
-    --muted-gray: #9ca3af;
-    --hairline-gray: #e5e7eb;
-    --yody-gold: #fab005;
-    --yody-indigo: #3f3f99;
-    --yody-indigo-dark: #2a2a86;
+    --brand: #2a2b86;
+    --brand-dark: #1e1f66;
+    --brand-tint: #f0f1ff;
+    --iris: #6366f1;
+    --iris-tint: #eef2ff;
+    --gold: #fcaf16;
+    --mint: #10b981;
+    --mint-tint: #ecfdf5;
+    --rose: #ef4444;
+    --rose-tint: #fef2f2;
+    --bg-paper: #ffffff;
+    --bg-mist: #f8fafc;
+    --border-line: #e2e8f0;
+    --fg-1: #0f172a;
+    --fg-2: #475569;
+    --fg-3: #94a3b8;
 }
 
 body {
-    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
-    color: var(--ink-navy);
-    background-color: var(--canvas-white);
+    font-family: var(--font-body, 'Be Vietnam Pro', system-ui, sans-serif);
+    color: var(--fg-1);
+    background-color: var(--bg-paper);
+}
+
+.font-mono {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.font-display {
+    font-family: var(--font-impact, 'Montserrat', sans-serif);
 }
 
 .fill-transition {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.highlight-success {
-    border-color: var(--yody-indigo) !important;
-    background-color: #f4f4fc !important;
-    box-shadow: 0 0 0 4px rgba(63, 63, 153, 0.12) !important;
+/* Nút bấm AI YODY */
+.btn-yody-ai {
+    background: linear-gradient(135deg, var(--brand) 0%, #3730a3 100%);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: var(--radius-md, 8px);
+    box-shadow: 0 2px 8px rgba(42, 43, 134, 0.2);
+}
+.btn-yody-ai:hover {
+    background: linear-gradient(135deg, #222370 0%, #312e81 100%);
+    box-shadow: 0 4px 12px rgba(42, 43, 134, 0.3);
     transform: translateY(-1px);
 }
 
-.highlight-error {
-    border-color: #ef4444 !important;
-    background-color: #fef2f2 !important;
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
-}
-
-input.error-state, textarea.error-state {
-    border-color: #ef4444 !important;
-}
-
-.skill-pill {
-    background-color: var(--surface-gray);
-    color: var(--yody-indigo-dark);
-    border: 1px solid var(--hairline-gray);
-    padding: 0.35rem 0.85rem;
+/* Avatar chữ cái ứng viên */
+.avatar-yody {
+    width: 3.5rem;
+    height: 3.5rem;
+    background: linear-gradient(135deg, var(--brand) 0%, #3730a3 100%);
+    color: var(--gold);
+    font-weight: 800;
+    font-family: var(--font-impact, 'Montserrat', sans-serif);
+    font-size: 1.25rem;
     border-radius: 9999px;
-    font-size: 0.8125rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(42, 43, 134, 0.25);
+    border: 2px solid #ffffff;
+}
+
+/* Thẻ kỹ năng & ngoại ngữ */
+.tag-yody {
+    background-color: var(--iris-tint);
+    color: var(--brand);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: -0.01em;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    gap: 0.35rem;
+    animation: fadeIn 0.3s ease-out forwards;
 }
 
-.exp-card {
-    background: var(--canvas-white);
-    border: 1px solid var(--hairline-gray);
-    border-left: 4px solid var(--yody-indigo);
-    border-radius: 0.5rem;
-    padding: 1.25rem;
-    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Thẻ thông tin kinh nghiệm & học vấn */
+.card-yody {
+    background: var(--bg-paper);
+    border: 1px solid var(--border-line);
+    border-left: 4px solid var(--brand);
+    border-radius: var(--radius-md, 8px);
+    padding: 1.15rem;
+    animation: slideUp 0.3s ease-out forwards;
 }
 
-.match-score-badge {
-    background: linear-gradient(135deg, #fab005 0%, #f59f00 100%);
-    color: #111928;
-    font-weight: 800;
+/* Cấu trúc Timeline kinh nghiệm làm việc */
+.timeline-container {
+    position: relative;
+    padding-left: 1.5rem;
+}
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 0.45rem;
+    width: 2px;
+    background-color: #cbd5e1;
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+.timeline-dot {
+    position: absolute;
+    left: -1.5rem;
+    top: 1.15rem;
+    transform: translateX(-50%);
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    background-color: var(--brand);
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2px rgba(42, 43, 134, 0.2);
+}
+
+/* Chỉ số độ tin cậy AI */
+.conf-badge {
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+}
+.conf-high {
+    background-color: var(--mint-tint);
+    color: #065f46;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.conf-med {
+    background-color: #fffbeb;
+    color: #92400e;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.conf-low {
+    background-color: var(--rose-tint);
+    color: #991b1b;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Hiệu ứng làm nổi bật trường dữ liệu điền tự động */
+.highlight-success {
+    border-color: var(--iris) !important;
+    background-color: var(--iris-tint) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+.highlight-error {
+    border-color: var(--rose) !important;
+    background-color: var(--rose-tint) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.96); }
+    from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Custom Scrollbar */
+/* Cuộn trang tùy chỉnh */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
 }
 ::-webkit-scrollbar-track {
-    background: var(--surface-gray);
+    background: var(--bg-mist);
 }
 ::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: #cbd5e1;
     border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--muted-gray);
+    background: #94a3b8;
 }

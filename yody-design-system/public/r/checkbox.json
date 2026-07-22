@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "checkbox",
+  "type": "registry:ui",
+  "title": "Checkbox (React)",
+  "description": "Open-code React Checkbox on Radix Checkbox primitive — checked = bg-primary (navy), lucide check icon, aria-invalid.",
+  "dependencies": [
+    "@radix-ui/react-checkbox",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "theme",
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "ui/checkbox.tsx",
+      "content": "\"use client\"\n\nimport * as React from \"react\"\nimport * as CheckboxPrimitive from \"@radix-ui/react-checkbox\"\nimport { CheckIcon } from \"lucide-react\"\n\nimport { cn } from \"@/lib/utils\"\n\n/** Checkbox — Radix Checkbox primitive, shadcn/ui open-code. Checked = bg-primary (navy). */\nfunction Checkbox({\n  className,\n  ...props\n}: React.ComponentProps<typeof CheckboxPrimitive.Root>) {\n  return (\n    <CheckboxPrimitive.Root\n      data-slot=\"checkbox\"\n      className={cn(\n        \"peer size-4 shrink-0 rounded-[4px] border border-input bg-background shadow-sm transition-shadow outline-none\",\n        \"focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]\",\n        \"disabled:cursor-not-allowed disabled:opacity-50\",\n        \"data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground\",\n        \"aria-invalid:border-destructive aria-invalid:ring-destructive/30\",\n        className\n      )}\n      {...props}\n    >\n      <CheckboxPrimitive.Indicator\n        data-slot=\"checkbox-indicator\"\n        className=\"flex items-center justify-center text-current transition-none\"\n      >\n        <CheckIcon className=\"size-3.5\" />\n      </CheckboxPrimitive.Indicator>\n    </CheckboxPrimitive.Root>\n  )\n}\n\nexport { Checkbox }\n",
+      "type": "registry:ui",
+      "target": "ui/checkbox.tsx"
+    }
+  ]
+}

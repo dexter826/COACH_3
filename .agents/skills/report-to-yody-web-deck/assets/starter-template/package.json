@@ -1,0 +1,14 @@
+{
+  "name": "yody-web-deck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static YODY presentation deck powered by Reveal.js",
+  "scripts": {
+    "start": "node scripts/serve.mjs"
+  },
+  "dependencies": {
+    "echarts": "6.1.0",
+    "lucide": "0.370.0",
+    "reveal.js": "5.2.1"
+  }
+}

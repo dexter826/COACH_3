@@ -1,0 +1,51 @@
+<!-- @dsCard group="Components" name="Badge" subtitle="Variants + YODY lifecycle pills (LIVE/BUILD/PLAN/GAP)" viewport="860x380" -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Badge · shadcn · YODY Design System</title>
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+@import "tailwindcss";
+@theme inline {
+  --color-background: var(--bg); --color-foreground: var(--fg-1);
+  --color-card: var(--bg); --color-card-foreground: var(--fg-1);
+  --color-popover: var(--bg); --color-popover-foreground: var(--fg-1);
+  --color-primary: var(--brand); --color-primary-foreground: #ffffff;
+  --color-secondary: var(--bg-2); --color-secondary-foreground: var(--fg-1);
+  --color-muted: var(--bg-muted); --color-muted-foreground: var(--fg-3);
+  --color-accent: var(--iris); --color-accent-foreground: #ffffff;
+  --color-destructive: var(--gap); --color-destructive-foreground: #ffffff;
+  --color-border: var(--border); --color-input: var(--border); --color-ring: var(--iris);
+  --font-sans: var(--font-body); --font-mono: var(--font-mono);
+  --radius: var(--radius-md); --radius-sm: var(--radius-sm); --radius-md: var(--radius-md); --radius-lg: var(--radius-lg); --radius-xl: var(--radius-xl);
+  --radius-pill: var(--radius-pill); --shadow-sm: var(--shadow-sm); --shadow-md: var(--shadow-md);
+}
+</style>
+<style>
+  body { background: var(--bg-2); color: var(--fg-1); font-family: var(--font-body); margin: 0; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 44px 40px 64px; }
+  .page-head { display:flex; align-items:baseline; justify-content:space-between; gap:24px; padding-bottom:16px; margin-bottom:32px; border-bottom:1px solid var(--border); }
+  .page-head h1 { font: 800 28px/1.1 var(--font-impact, var(--font-body)); letter-spacing:-0.02em; margin:0; }
+  .page-head .meta { font: 700 11px/1 var(--font-mono); color: var(--brand); letter-spacing:0.26em; text-transform:uppercase; white-space:nowrap; }
+  .preview { display:flex; flex-wrap:wrap; gap:28px 40px; align-items:flex-start; padding:36px 32px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
+  .col { display:flex; flex-direction:column; gap:14px; }
+  .lbl { font:600 11px/1 var(--font-mono); letter-spacing:0.14em; text-transform:uppercase; color:var(--fg-3); }
+  .row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+</style>
+</head>
+<body data-surface="app">
+<div class="wrap">
+  <div class="page-head"><h1>Badge</h1><span class="meta">shadcn · registry/ui</span></div>
+  <div class="preview">
+<div class="col"><span class="lbl">Variants</span>
+  <div class="row"><span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold bg-primary text-primary-foreground">Default</span><span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground">Secondary</span><span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold border border-border text-foreground">Outline</span><span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold bg-destructive text-destructive-foreground">Destructive</span></div>
+</div>
+<div class="col"><span class="lbl">Lifecycle (status)</span>
+  <div class="row"><span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold font-mono tracking-wider" style="background:var(--mint-tint);color:var(--mint-deep)">LIVE</span><span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold font-mono tracking-wider" style="background:var(--iris-tint);color:var(--iris-deep)">BUILD</span><span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold font-mono tracking-wider" style="background:var(--gold-tint);color:var(--gold-deep)">PLAN</span><span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold font-mono tracking-wider" style="background:var(--rose-tint);color:var(--rose-deep)">GAP</span></div>
+</div>  </div>
+</div>
+</body>
+</html>

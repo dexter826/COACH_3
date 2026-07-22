@@ -1,0 +1,93 @@
+/* ───────────────────────────────────────────────────────────────────────
+   YODY Design System v3 — token bridge (PROTOTYPE)
+   Mirrors src/app/kpi/t6-2026/_v3/ds-v3.css verbatim in values.
+   Scope under [data-ds-v3] [data-surface="portal"] — never leaks global.
+   Fonts: Google CDN here (repo self-hosts Be Vietnam Pro + injects the rest
+   via next/font). Values identical to colors_and_type.css.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Montserrat:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,400;1,500;1,600;1,700;1,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+[data-ds-v3] {
+  /* brand + accents */
+  --brand: #2a2b86; --brand-light: #4a4bc8; --brand-deep: #16175a; --brand-tint: #eeeefb;
+  --iris: #7c6cf5; --iris-deep: #4a4bc8; --iris-tint: #eeeefb;
+  --gold: #fcaf16; --gold-deep: #b07a00; --gold-tint: #fff4d8;
+  --mint: #10b981; --mint-deep: #047857; --mint-tint: #d1fae5;
+  --rose: #f472b6; --rose-deep: #be185d; --rose-tint: #fde7f1;
+
+  /* status */
+  --live: var(--mint); --live-bg: rgba(16,185,129,.10);
+  --build: var(--iris); --build-bg: rgba(124,108,245,.10);
+  --gap: #ef4444; --gap-bg: rgba(239,68,68,.08); --gap-deep: #991b1b;
+  --plan: #f59e0b; --plan-bg: rgba(245,158,11,.10); --plan-deep: #7a5400;
+
+  /* text + surfaces */
+  --fg-1: #1a1b3a; --fg-2: #5a5c7e; --fg-3: #6b6d8c;
+  --bg: #fcfcff; --bg-2: #f4f5fb; --bg-muted: #ecedf8; --bg-ink: #0e0f24; --bg-warm: #fbfaf6;
+  --border: #e6e7f2; --border-light: #f0f1f8; --border-hover: #d0d2e8;
+
+  /* shadows · radius */
+  --shadow-sm: 0 1px 2px rgba(74,75,200,.05);
+  --shadow: 0 2px 6px rgba(74,75,200,.06);
+  --shadow-md: 0 4px 16px rgba(74,75,200,.08);
+  --shadow-lg: 0 12px 32px rgba(74,75,200,.12);
+  --shadow-xl: 0 16px 40px rgba(74,75,200,.14);
+  --radius-xs: 4px; --radius-sm: 8px; --radius: 12px; --radius-md: 14px;
+  --radius-lg: 16px; --radius-xl: 24px; --radius-pill: 9999px;
+
+  /* spacing (4px base) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px;
+  --s-6: 24px; --s-8: 32px; --s-10: 40px;
+
+  /* portal density */
+  --gutter: 20px;
+  --container-max: 1280px;
+  --row-cozy: 44px;
+
+  /* fonts */
+  --font-body: 'Be Vietnam Pro', system-ui, sans-serif;
+  --font-impact: 'Montserrat', 'Be Vietnam Pro', sans-serif;
+  --font-numeric: 'Montserrat', sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+
+  /* type scale (v3) */
+  --type-h1: 800 clamp(40px, 5vw, 60px)/1.06 var(--font-impact);
+  --type-h2: 700 clamp(26px, 3vw, 34px)/1.15 var(--font-impact);
+  --type-h3: 700 20px/1.3 var(--font-impact);
+  --type-kpi: 800 clamp(40px, 4.4vw, 56px)/0.9 var(--font-numeric);
+  --type-card-title: 700 17px/1.3 var(--font-body);
+  --type-body-lg: 400 17px/1.6 var(--font-body);
+  --type-body: 400 15px/1.6 var(--font-body);
+  --type-body-sm: 400 13px/1.55 var(--font-body);
+  --type-label: 600 13px/1.35 var(--font-body);
+  --type-mono: 500 12px/1.4 var(--font-mono);
+  --type-eyebrow: 700 11px/1 var(--font-mono);
+
+  /* motion + a11y */
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-panel: cubic-bezier(.32,.72,0,1);
+  --dur-fast: 150ms; --dur: 200ms; --dur-slow: 300ms;
+  --focus-ring: 0 0 0 3px rgba(124,108,245,0.40);
+}
+
+/* ── Type helpers (scoped) ────────────────────────────────────────────── */
+[data-ds-v3] .v3-eyebrow { font: var(--type-eyebrow); letter-spacing: .3em; text-transform: uppercase; color: var(--brand); }
+[data-ds-v3] .v3-h1 { font: var(--type-h1); letter-spacing: -.02em; color: var(--fg-1); }
+[data-ds-v3] .v3-h2 { font: var(--type-h2); letter-spacing: -.01em; color: var(--fg-1); }
+[data-ds-v3] .v3-h3 { font: var(--type-h3); color: var(--fg-1); }
+[data-ds-v3] .v3-card-title { font: var(--type-card-title); color: var(--fg-1); }
+[data-ds-v3] .v3-kpi { font: var(--type-kpi); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+[data-ds-v3] .v3-lede { font: var(--type-body-lg); color: var(--fg-2); }
+[data-ds-v3] .v3-body { font: var(--type-body); color: var(--fg-2); }
+[data-ds-v3] .v3-body-sm { font: var(--type-body-sm); color: var(--fg-2); }
+[data-ds-v3] .v3-label { font: var(--type-label); color: var(--fg-1); }
+[data-ds-v3] .v3-mono { font: var(--type-mono); color: var(--fg-3); }
+[data-ds-v3] .v3-tag { font: var(--type-mono); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+
+/* big-number gradient (v3 portal numeral) */
+[data-ds-v3] .v3-num-grad {
+  background: linear-gradient(180deg, var(--brand), var(--brand-deep));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
