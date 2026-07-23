@@ -1,0 +1,23 @@
+[
+  {
+    "fileName": "ats_ai_skills_concept.png",
+    "prompt": "Clean minimalist corporate technology diagram representing AI skills in ATS, white background, navy blue and golden yellow accents",
+    "aspectRatio": "16:9",
+    "altText": "Sơ đồ kiến trúc AI Skills",
+    "placement": "cover"
+  },
+  {
+    "fileName": "ats_architecture_diagram.png",
+    "prompt": "Clean minimalist corporate technology diagram representing ATS module architecture Data Model, white background, navy blue and golden yellow accents",
+    "aspectRatio": "16:9",
+    "altText": "Sơ đồ kiến trúc Data Model",
+    "placement": "cover"
+  },
+  {
+    "fileName": "ats_roadmap_mvp.png",
+    "prompt": "Clean minimalist corporate technology timeline roadmap for MVP deployment, white background, navy blue and golden yellow accents",
+    "aspectRatio": "16:9",
+    "altText": "Lộ trình triển khai MVP",
+    "placement": "cover"
+  }
+]

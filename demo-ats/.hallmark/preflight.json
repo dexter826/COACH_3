@@ -1,0 +1,15 @@
+{
+  "date": "2026-07-22",
+  "fontStack": "Be Vietnam Pro + Montserrat + JetBrains Mono",
+  "palette": "YODY indigo/gold converted into OKLCH tokens",
+  "motion": "motion-cut; transform and opacity only",
+  "spacing": "4-point named token scale",
+  "framework": "vanilla HTML/CSS/JS with Express static server",
+  "preserved": [
+    "YODY brand name",
+    "ATS three-pane workflow",
+    "CV PDF extraction action",
+    "JD matching action",
+    "existing API contract"
+  ]
+}

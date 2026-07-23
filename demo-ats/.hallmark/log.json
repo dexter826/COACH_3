@@ -1,0 +1,10 @@
+[
+  {
+    "date": "2026-07-22",
+    "scope": "single-page app",
+    "macrostructure": "Workbench",
+    "theme": "YODY operational indigo-gold",
+    "enrichment": "none",
+    "brief": "Apply Hallmark redesign to demo ATS while preserving parser and matcher logic"
+  }
+]
