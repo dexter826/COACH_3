@@ -2,7 +2,6 @@
   "name": "demo-cv-autofill",
   "version": "1.0.0",
   "description": "",
-  "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,7 +13,7 @@
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1",
+    "express": "^4.19.2",
     "multer": "^2.2.0",
     "pdf-parse": "^2.4.5"
   }
