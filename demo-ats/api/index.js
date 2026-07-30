@@ -11,7 +11,10 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+const path = require('path');
+if (process.env.NODE_ENV !== 'production') {
+    app.use(express.static(path.join(__dirname, '..')));
+}
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -187,3 +190,9 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = app;
+
+module.exports.config = {
+    api: {
+        bodyParser: false,
+    },
+};
