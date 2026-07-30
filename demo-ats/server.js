@@ -180,6 +180,10 @@ Nhiệm vụ: Nhận vào JSON ứng viên và JD (text), so sánh linh hoạt (
     }
 });
 
-app.listen(port, () => {
-    console.log(`\n✅ Backend chạy tại http://localhost:${port}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(port, () => {
+        console.log(`\n✅ Backend chạy tại http://localhost:${port}`);
+    });
+}
+
+module.exports = app;

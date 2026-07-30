@@ -37,11 +37,15 @@ function escapeHtml(value) {
 }
 
 function apiUrl(path) {
-    const isBackendOrigin = window.location.hostname === 'localhost' && window.location.port === '3000';
-    if (window.location.protocol === 'file:' || !isBackendOrigin) {
-        return `http://localhost:3000${path}`;
+    if (window.location.protocol === 'file:') {
+        return `http://localhost:3000${path}`; // Chạy bằng file local
     }
-    return path;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        if (window.location.port !== '3000') {
+            return `http://localhost:3000${path}`; // Chạy Live Server Frontend
+        }
+    }
+    return path; // Đã deploy Vercel hoặc chạy npm start
 }
 
 async function readJsonResponse(response, fallbackMessage) {
