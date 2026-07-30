@@ -787,3 +787,37 @@ textarea:focus {
         padding: var(--space-sm);
     }
 }
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.6rem 1rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--color-ink-3);
+    cursor: pointer;
+    transition: all var(--dur-fast);
+}
+
+.tab-btn:hover {
+    color: var(--color-ink);
+}
+
+.tab-btn.active {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+}
+
+.filter-select {
+    appearance: auto;
+}
+
+.highlight-match {
+    background-color: #dbeafe;
+    color: #1e3a8a;
+    padding: 0 4px;
+    border-radius: 4px;
+    font-weight: 600;
+}

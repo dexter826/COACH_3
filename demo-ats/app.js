@@ -25,6 +25,7 @@ const formFields = {
 };
 
 let currentCandidateRecord = null;
+let candidatePool = window.SAMPLE_CANDIDATES || [];
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -125,7 +126,10 @@ extractBtn.addEventListener('click', async () => {
 
         const candidateRecord = await readJsonResponse(response, 'Không thể trích xuất CV.');
         currentCandidateRecord = candidateRecord;
+        candidatePool.unshift(candidateRecord);
         fillForm(candidateRecord);
+        showCandidateDetail();
+        renderCandidateGrid(candidatePool);
     } catch (error) {
         alert('Đã xảy ra lỗi: ' + error.message);
     } finally {
@@ -436,3 +440,269 @@ function renderMatchResult(matchResult) {
         reasonIcon.textContent = '×';
     }
 }
+
+// --- CANDIDATE LIST & ADVANCED SEARCH LOGIC ---
+
+const candidateListPane = document.getElementById('candidateListPane');
+const formPane = document.getElementById('formPane');
+const candidateGrid = document.getElementById('candidateGrid');
+const tabListBtn = document.getElementById('tabListBtn');
+const tabDetailBtn = document.getElementById('tabDetailBtn');
+const searchKeyword = document.getElementById('searchKeyword');
+const searchRole = document.getElementById('searchRole');
+const searchSkills = document.getElementById('searchSkills');
+const searchExp = document.getElementById('searchExp');
+const searchLocation = document.getElementById('searchLocation');
+const searchDegree = document.getElementById('searchDegree');
+
+function showCandidateList() {
+    if (candidateListPane) candidateListPane.classList.remove('hidden');
+    if (formPane) formPane.classList.add('hidden');
+    if (tabListBtn) tabListBtn.classList.add('active');
+    if (tabDetailBtn) tabDetailBtn.classList.remove('active');
+}
+
+function showCandidateDetail() {
+    if (candidateListPane) candidateListPane.classList.add('hidden');
+    if (formPane) formPane.classList.remove('hidden');
+    if (tabListBtn) tabListBtn.classList.remove('active');
+    if (tabDetailBtn) tabDetailBtn.classList.add('active');
+}
+
+if (tabListBtn) tabListBtn.addEventListener('click', showCandidateList);
+if (tabDetailBtn) tabDetailBtn.addEventListener('click', showCandidateDetail);
+
+function formatExperience(months) {
+    if (!months || months <= 0) return '0 tháng';
+    const y = Math.floor(months / 12);
+    const m = months % 12;
+    if (y > 0 && m > 0) return `${y} năm ${m} tháng`;
+    if (y > 0) return `${y} năm`;
+    return `${m} tháng`;
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function evaluateBooleanQuery(query, text) {
+    if (!query.trim()) return { isMatch: true };
+    
+    const phrases = [];
+    let processedQuery = query.replace(/"([^"]+)"/g, (match, phrase) => {
+        phrases.push(phrase.toLowerCase());
+        return ` __PHRASE_${phrases.length - 1}__ `;
+    });
+
+    processedQuery = processedQuery
+        .replace(/\bAND\b/ig, '&&')
+        .replace(/\bOR\b/ig, '||');
+
+    const textLower = text.toLowerCase();
+
+    processedQuery = processedQuery.replace(/([^\s\(\)\|&]+)/g, (match) => {
+        if (match === '&&' || match === '||') return match;
+        if (match.startsWith('__PHRASE_')) {
+            const idx = parseInt(match.replace('__PHRASE_', '').replace('__', ''));
+            const phrase = phrases[idx];
+            return textLower.includes(phrase) ? 'true' : 'false';
+        } else {
+            const word = match.toLowerCase();
+            return textLower.includes(word) ? 'true' : 'false';
+        }
+    });
+
+    try {
+        const isMatch = new Function(`return !!(${processedQuery});`)();
+        return { isMatch };
+    } catch (e) {
+        // Fallback for syntax error
+        const words = query.toLowerCase().replace(/[\(\)"]/g, ' ').split(/\s+/).filter(w => w !== 'and' && w !== 'or' && w);
+        const matched = words.filter(w => textLower.includes(w));
+        return { isMatch: matched.length > 0 };
+    }
+}
+
+function getHighlightedSnippet(text, keywords) {
+    if (!text) return '';
+    if (!keywords || keywords.length === 0) {
+        return text.length > 200 ? text.substring(0, 200) + '...' : text;
+    }
+    
+    let snippet = text;
+    let firstIdx = -1;
+    let sortedKw = [...keywords].sort((a,b) => b.length - a.length);
+
+    for (const kw of sortedKw) {
+        const idx = text.toLowerCase().indexOf(kw);
+        if (idx !== -1 && (firstIdx === -1 || idx < firstIdx)) {
+            firstIdx = idx;
+        }
+    }
+
+    if (firstIdx !== -1) {
+        const start = Math.max(0, firstIdx - 60);
+        const end = Math.min(text.length, firstIdx + 200);
+        snippet = (start > 0 ? '...' : '') + text.substring(start, end) + (end < text.length ? '...' : '');
+    } else {
+        snippet = text.length > 200 ? text.substring(0, 200) + '...' : text;
+    }
+
+    sortedKw.forEach(kw => {
+        if(kw.length < 2) return;
+        const regex = new RegExp(`(${escapeRegExp(kw)})`, 'gi');
+        snippet = snippet.replace(regex, '<mark class="highlight-match">$1</mark>');
+    });
+
+    return snippet;
+}
+
+function renderCandidateGrid(candidates, highlightKeywords = []) {
+    if (!candidateGrid) return;
+    candidateGrid.innerHTML = '';
+    
+    if (candidates.length === 0) {
+        candidateGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--color-ink-3); padding: var(--space-xl);">Không tìm thấy ứng viên phù hợp.</div>';
+        return;
+    }
+
+    candidates.forEach((record, index) => {
+        const cand = record.candidate || {};
+        const card = document.createElement('div');
+        card.className = 'card-yody candidate-card';
+        card.style.cursor = 'pointer';
+        card.style.transition = 'transform var(--dur-fast), box-shadow var(--dur-fast)';
+        
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-4px)';
+            card.style.boxShadow = 'var(--shadow-md)';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'none';
+            card.style.boxShadow = 'var(--shadow-sm)';
+        });
+
+        card.addEventListener('click', () => {
+            currentCandidateRecord = record;
+            fillForm(record);
+            showCandidateDetail();
+        });
+
+        const expStr = formatExperience(cand.totalExperienceMonths);
+        const skillsHtml = (cand.skills || []).slice(0, 7).map(s => `<span class="tag-yody" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">${escapeHtml(s)}</span>`).join('');
+        
+        let bestText = cand.professionalSummary || '';
+        let snippetHtml = getHighlightedSnippet(bestText, highlightKeywords);
+        
+        if (highlightKeywords.length > 0 && !highlightKeywords.some(kw => bestText.toLowerCase().includes(kw))) {
+            const expWithMatch = (record.workExperience || []).find(w => 
+                highlightKeywords.some(kw => (w.description||'').toLowerCase().includes(kw) || (w.title||'').toLowerCase().includes(kw))
+            );
+            if (expWithMatch) {
+                bestText = `${expWithMatch.title} tại ${expWithMatch.company}: ${expWithMatch.description}`;
+                snippetHtml = getHighlightedSnippet(bestText, highlightKeywords);
+            }
+        }
+
+        card.innerHTML = `
+            <div style="display: flex; gap: var(--space-md);">
+                <div class="avatar-yody" style="width: 50px; height: 50px; font-size: 1.2rem; flex-shrink: 0;">${getInitials(cand.fullName)}</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.2rem;">
+                        <div class="font-display" style="font-weight: 800; font-size: 1.2rem; color: var(--color-ink);">${escapeHtml(cand.fullName || 'Chưa rõ tên')}</div>
+                        <div style="font-size: 0.85rem; color: var(--color-ink-2); display: flex; align-items: center; gap: 0.3rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            ${escapeHtml(cand.location || 'Chưa rõ')}
+                        </div>
+                    </div>
+                    <div style="font-size: 0.95rem; font-weight: 600; color: var(--color-ink-2); margin-bottom: 0.5rem;">
+                        ${escapeHtml(cand.currentTitle || 'Chưa có chức danh')} • ${expStr}
+                    </div>
+                    <div class="pill-wrap" style="gap: 0.4rem; margin-bottom: 0.8rem;">
+                        ${skillsHtml}
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--color-ink-2); line-height: 1.5; background: var(--color-surface-2); padding: 0.6rem; border-radius: 6px; border-left: 3px solid var(--color-rule);">
+                        ${snippetHtml || '<span style="font-style: italic;">Chưa có tóm tắt</span>'}
+                    </div>
+                </div>
+            </div>
+        `;
+        candidateGrid.appendChild(card);
+    });
+}
+
+function filterCandidates() {
+    const rawQuery = (searchKeyword.value || '');
+    const role = (searchRole ? searchRole.value : '').toLowerCase();
+    const sk = (searchSkills ? searchSkills.value : '').toLowerCase();
+    const exp = parseInt(searchExp ? searchExp.value : '0', 10);
+    const loc = (searchLocation ? searchLocation.value : '').toLowerCase();
+    const deg = (searchDegree ? searchDegree.value : '').toLowerCase();
+
+    const allSearchTokens = rawQuery.toLowerCase().replace(/[\(\)"]/g, ' ').split(/\s+/).filter(w => w !== 'and' && w !== 'or' && w);
+    const phrases = [];
+    rawQuery.replace(/"([^"]+)"/g, (match, phrase) => {
+        phrases.push(phrase.toLowerCase());
+    });
+    const allKeywordsToHighlight = [...phrases, ...allSearchTokens];
+
+    const filtered = candidatePool.filter(record => {
+        const cand = record.candidate || {};
+        
+        // 1. Boolean Search Match
+        let fullText = `${cand.fullName || ''} ${cand.currentTitle || ''} ${cand.professionalSummary || ''} ${(cand.skills||[]).join(' ')} `;
+        (record.workExperience || []).forEach(w => { fullText += `${w.title || ''} ${w.description || ''} `; });
+        const boolResult = evaluateBooleanQuery(rawQuery, fullText);
+        const keywordMatch = boolResult.isMatch;
+
+        // 2. Role match
+        const roleMatch = role === '' || (cand.currentTitle || '').toLowerCase().includes(role);
+
+        // 3. Skills match
+        const candSkills = (cand.skills || []).map(s => s.toLowerCase());
+        const skillsMatch = sk === '' || candSkills.some(cs => cs.includes(sk));
+
+        // 4. Experience match
+        const candExp = cand.totalExperienceMonths || 0;
+        const expMatch = candExp >= exp;
+
+        // 5. Location match
+        const candLoc = (cand.location || '').toLowerCase();
+        let locMatch = true;
+        if (loc !== '') {
+            if (loc === 'khác') {
+                locMatch = !['hà nội', 'hồ chí minh', 'đà nẵng'].some(city => candLoc.includes(city));
+            } else {
+                locMatch = candLoc.includes(loc);
+            }
+        }
+
+        // 6. Degree match
+        let degreeMatch = true;
+        if (deg !== '') {
+            const edus = record.education || [];
+            const candDegrees = edus.map(e => (e.degree || '').toLowerCase());
+            if (deg === 'cử nhân') {
+                degreeMatch = candDegrees.some(d => d.includes('cử nhân') || d.includes('đại học'));
+            } else if (deg === 'cao đẳng') {
+                degreeMatch = candDegrees.some(d => d.includes('cao đẳng'));
+            }
+        }
+
+        return keywordMatch && roleMatch && skillsMatch && expMatch && locMatch && degreeMatch;
+    });
+
+    renderCandidateGrid(filtered, allKeywordsToHighlight);
+}
+
+if (searchKeyword) searchKeyword.addEventListener('input', filterCandidates);
+if (searchRole) searchRole.addEventListener('change', filterCandidates);
+if (searchSkills) searchSkills.addEventListener('change', filterCandidates);
+if (searchExp) searchExp.addEventListener('change', filterCandidates);
+if (searchLocation) searchLocation.addEventListener('change', filterCandidates);
+if (searchDegree) searchDegree.addEventListener('change', filterCandidates);
+
+// Initialize grid on load
+document.addEventListener('DOMContentLoaded', () => {
+    renderCandidateGrid(candidatePool);
+});
