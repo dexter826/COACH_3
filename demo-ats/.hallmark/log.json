@@ -1,10 +1,11 @@
 [
   {
-    "date": "2026-07-22",
-    "scope": "single-page app",
+    "date": "2026-08-03",
+    "scope": "single-page app (ATS Workbench)",
     "macrostructure": "Workbench",
-    "theme": "YODY operational indigo-gold",
-    "enrichment": "none",
-    "brief": "Apply Hallmark redesign to demo ATS while preserving parser and matcher logic"
+    "theme": "YODY Primary Navy (#2a2b86) & Gold (#fcaf16) Dominant",
+    "enrichment": "Streamlined 3-pane workbench: Left Rail (CV Parser), Center Canvas (Profile Editor), Right Inspector (JD Matcher)",
+    "surface": "[data-surface=\"app\"]",
+    "brief": "Đã loại bỏ toàn bộ các tính năng thừa ngoài yêu cầu (Kho ứng viên, bộ lọc Boolean, dữ liệu mẫu) để quay về luồng cốt lõi tinh gọn 3 cột chuẩn YODY ATS."
   }
 ]

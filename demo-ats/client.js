@@ -1,32 +1,65 @@
+// Khởi tạo các phần tử giao diện chính
 const extractBtn = document.getElementById('extractBtn');
 const cvFileInput = document.getElementById('cvFile');
 const fileNameDisplay = document.getElementById('fileNameDisplay');
 const loadingOverlay = document.getElementById('loadingOverlay');
-const avatarInitials = document.getElementById('avatarInitials');
+const loadingTime = document.getElementById('loadingTime');
 const dropzone = document.getElementById('dropzone');
+const btnIcon = document.getElementById('btnIcon');
+const btnText = document.getElementById('btnText');
 
-const formFields = {
-    fullName: document.getElementById('form-fullName'),
-    email: document.getElementById('form-email'),
-    phone: document.getElementById('form-phone'),
-    location: document.getElementById('form-location'),
-    currentTitle: document.getElementById('form-currentTitle'),
-    totalExperienceMonths: document.getElementById('form-totalExperienceMonths'),
-    linkLinkedin: document.getElementById('form-link-linkedin'),
-    linkGithub: document.getElementById('form-link-github'),
-    linkPortfolio: document.getElementById('form-link-portfolio'),
-    professionalSummary: document.getElementById('form-professionalSummary'),
-    skills: document.getElementById('form-skills'),
-    languages: document.getElementById('form-languages'),
-    workExperience: document.getElementById('form-experience'),
-    projects: document.getElementById('form-projects'),
-    education: document.getElementById('form-education'),
-    certifications: document.getElementById('form-certifications')
-};
+// Các phần tử hiển thị hiệu năng
+const timingBanner = document.getElementById('timingBanner');
+const timeTotal = document.getElementById('timeTotal');
+const timePdf = document.getElementById('timePdf');
+const timeGemini = document.getElementById('timeGemini');
+const timeNetwork = document.getElementById('timeNetwork');
 
+// Các phần tử của JD Matcher
+const matchBtn = document.getElementById('matchBtn');
+const jdInput = document.getElementById('jdInput');
+const matchResult = document.getElementById('matchResult');
+const scorePath = document.getElementById('scorePath');
+const scoreText = document.getElementById('scoreText');
+const recommendationBadge = document.getElementById('recommendationBadge');
+const reasonBox = document.getElementById('reasonBox');
+const reasonTitle = document.getElementById('reasonTitle');
+const reasonIcon = document.getElementById('reasonIcon');
+const reasonText = document.getElementById('reasonText');
+const toggleJdExpand = document.getElementById('toggleJdExpand');
+const jdModal = document.getElementById('jdModal');
+const closeJdModal = document.getElementById('closeJdModal');
+const saveJdModal = document.getElementById('saveJdModal');
+const modalJdInput = document.getElementById('modalJdInput');
+
+// Các phần tử form hồ sơ ứng viên
+const formName = document.getElementById('form-name');
+const formTitle = document.getElementById('form-title');
+const formAvatarInitials = document.getElementById('formAvatarInitials');
+const formEmail = document.getElementById('form-email');
+const formPhone = document.getElementById('form-phone');
+const formLocation = document.getElementById('form-location');
+const formYob = document.getElementById('form-yob');
+const formGender = document.getElementById('form-gender');
+const formSummary = document.getElementById('form-summary');
+const formSkillsTech = document.getElementById('form-skills-technical');
+const formSkillsSoft = document.getElementById('form-skills-soft');
+const formSkillsLang = document.getElementById('form-skills-languages');
+const formSocialLinks = document.getElementById('form-social-links');
+const formExperience = document.getElementById('form-experience');
+const formProjects = document.getElementById('form-projects');
+const formEducation = document.getElementById('form-education');
+const formCertificates = document.getElementById('form-certificates');
+const formAwards = document.getElementById('form-awards');
+const formActivities = document.getElementById('form-activities');
+const formReferences = document.getElementById('form-references');
+const btnSaveCandidate = document.getElementById('btnSaveCandidate');
+const btnResetForm = document.getElementById('btnResetForm');
+
+// Dữ liệu ứng viên đang mở trong form
 let currentCandidateRecord = null;
-let candidatePool = window.SAMPLE_CANDIDATES || [];
 
+// Khử ký tự đặc biệt tránh XSS
 function escapeHtml(value) {
     return String(value ?? '')
         .replaceAll('&', '&amp;')
@@ -36,735 +69,1103 @@ function escapeHtml(value) {
         .replaceAll("'", '&#039;');
 }
 
-function apiUrl(path) {
-    if (window.location.protocol === 'file:') {
-        return `http://localhost:3000${path}`; // Chạy bằng file local
-    }
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        if (window.location.port !== '3000') {
-            return `http://localhost:3000${path}`; // Chạy Live Server Frontend
-        }
-    }
-    return path; // Đã deploy Vercel hoặc chạy npm start
-}
+// Hiển thị thông báo toast nổi
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
 
-async function readJsonResponse(response, fallbackMessage) {
-    const text = await response.text();
-    if (!text.trim()) {
-        throw new Error(`${fallbackMessage} Server trả về phản hồi rỗng (HTTP ${response.status}).`);
-    }
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <span class="toast-message">${escapeHtml(message)}</span>
+        </div>
+    `;
 
-    try {
-        const data = JSON.parse(text);
-        if (!response.ok) {
-            throw new Error(data.error || `${fallbackMessage} HTTP ${response.status}.`);
-        }
-        return data;
-    } catch (error) {
-        if (error.message && !error.message.startsWith('Unexpected')) {
-            throw error;
-        }
-        const preview = text.slice(0, 180).replace(/\s+/g, ' ').trim();
-        throw new Error(`${fallbackMessage} Server không trả JSON hợp lệ (HTTP ${response.status}). Phản hồi: ${preview || 'rỗng'}`);
-    }
-}
-
-function setFileName(file) {
-    if (file) {
-        fileNameDisplay.textContent = `Đã chọn: ${file.name}`;
-        fileNameDisplay.style.color = 'var(--color-accent)';
-        fileNameDisplay.style.fontWeight = '800';
-    } else {
-        fileNameDisplay.textContent = 'PDF tối đa 10MB';
-        fileNameDisplay.removeAttribute('style');
-    }
-}
-
-cvFileInput.addEventListener('change', (event) => {
-    setFileName(event.target.files[0]);
-});
-
-if (dropzone) {
-    ['dragenter', 'dragover'].forEach((eventName) => {
-        dropzone.addEventListener(eventName, (event) => {
-            event.preventDefault();
-            dropzone.classList.add('drag-over');
-        });
-    });
-
-    ['dragleave', 'drop'].forEach((eventName) => {
-        dropzone.addEventListener(eventName, (event) => {
-            event.preventDefault();
-            dropzone.classList.remove('drag-over');
-        });
-    });
-
-    dropzone.addEventListener('drop', (event) => {
-        const file = event.dataTransfer.files[0];
-        if (!file) return;
-        const transfer = new DataTransfer();
-        transfer.items.add(file);
-        cvFileInput.files = transfer.files;
-        setFileName(file);
-    });
-}
-
-extractBtn.addEventListener('click', async () => {
-    const files = cvFileInput.files;
-
-    if (files.length === 0) {
-        alert('Vui lòng chọn file CV.');
-        return;
-    }
-
-    const tClientStart = Date.now();
-    showCandidateDetail();
-    setLoading(true);
-
-    try {
-        const formData = new FormData();
-        formData.append('cvFile', files[0]);
-
-        const response = await fetch(apiUrl('/api/parse-cv'), {
-            method: 'POST',
-            body: formData
-        });
-
-        const candidateRecord = await readJsonResponse(response, 'Không thể trích xuất CV.');
-        const totalClientMs = Date.now() - tClientStart;
-
-        currentCandidateRecord = candidateRecord;
-        candidatePool.unshift(candidateRecord);
-        fillForm(candidateRecord);
-        renderCandidateGrid(candidatePool);
-
-        displayTimings(candidateRecord._timings, totalClientMs);
-    } catch (error) {
-        alert('Đã xảy ra lỗi: ' + error.message);
-    } finally {
-        setLoading(false);
-    }
-});
-
-// Hiển thị thống kê thời gian thực hiện từng bước
-function displayTimings(timings, totalClientMs) {
-    const banner = document.getElementById('timingBanner');
-    if (!banner) return;
-
-    const pdfMs = timings?.pdfParseMs || 0;
-    const aiMs = timings?.aiInferenceMs || 0;
-    const serverMs = timings?.totalServerMs || (pdfMs + aiMs);
-    const clientNetworkMs = Math.max(0, totalClientMs - serverMs);
-
-    const totalEl = document.getElementById('timeTotalVal');
-    const pdfEl = document.getElementById('timePdfVal');
-    const aiEl = document.getElementById('timeAiVal');
-    const clientEl = document.getElementById('timeClientVal');
-
-    if (totalEl) totalEl.textContent = `${(totalClientMs / 1000).toFixed(2)}s`;
-    if (pdfEl) pdfEl.textContent = `${pdfMs}ms`;
-    if (aiEl) aiEl.textContent = `${(aiMs / 1000).toFixed(2)}s`;
-    if (clientEl) clientEl.textContent = `${(clientNetworkMs / 1000).toFixed(2)}s`;
-    banner.classList.remove('hidden');
-}
-
-let parseLoadingTimer = null;
-
-// Cập nhật trạng thái loading kèm đồng hồ bấm giờ
-function setLoading(isLoading) {
-    const formPane = document.getElementById('formPane');
-    const overlay = document.getElementById('loadingOverlay');
-    const loadingTimeEl = document.getElementById('loadingTime');
-    const btnTextEl = document.getElementById('btnText');
-    extractBtn.disabled = isLoading;
-
-    if (isLoading) {
-        if (formPane) {
-            formPane.scrollTop = 0;
-            formPane.style.pointerEvents = 'none';
-        }
-        if (overlay) {
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-        }
-
-        const startTime = Date.now();
-        if (loadingTimeEl) loadingTimeEl.textContent = 'Đang xử lý: 0.0s';
-        if (btnTextEl) btnTextEl.textContent = 'Đang xử lý... (0.0s)';
-
-        clearInterval(parseLoadingTimer);
-        parseLoadingTimer = setInterval(() => {
-            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-            if (loadingTimeEl) loadingTimeEl.textContent = `Đang xử lý: ${elapsed}s`;
-            if (btnTextEl) btnTextEl.textContent = `Đang xử lý... (${elapsed}s)`;
-        }, 100);
-    } else {
-        clearInterval(parseLoadingTimer);
-        if (formPane) formPane.style.pointerEvents = '';
-        if (overlay) {
-            overlay.classList.add('hidden');
-            overlay.classList.remove('flex');
-        }
-        if (btnTextEl) btnTextEl.textContent = 'Trích xuất CV';
-    }
-}
-
-function triggerHighlight(element, isSuccess) {
-    if (!element) return;
-    element.classList.remove('highlight-success', 'highlight-error');
-    void element.offsetWidth;
-    element.classList.add(isSuccess ? 'highlight-success' : 'highlight-error');
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => {
-        element.classList.remove('highlight-success', 'highlight-error');
-    }, 900);
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
 }
 
-function getInitials(name) {
-    if (!name) return 'YD';
+// Cập nhật chữ viết tắt avatar đại diện
+function updateAvatarInitials(name) {
+    if (!formAvatarInitials) return;
+    if (!name || !name.trim()) {
+        formAvatarInitials.textContent = 'YD';
+        return;
+    }
     const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    if (parts.length === 1) {
+        formAvatarInitials.textContent = parts[0].substring(0, 2).toUpperCase();
+    } else {
+        const first = parts[0][0] || '';
+        const last = parts[parts.length - 1][0] || '';
+        formAvatarInitials.textContent = (first + last).toUpperCase();
+    }
 }
 
+// Điền toàn bộ thông tin ứng viên vào form
 function fillForm(record) {
-    const candidate = record.candidate || {};
-    const links = candidate.links || {};
-    const missing = record.missingFields || [];
+    currentCandidateRecord = record;
+    if (!record) return;
 
-    avatarInitials.textContent = getInitials(candidate.fullName);
+    const c = record.candidate || {};
+    if (formName) formName.value = c.fullName || '';
+    if (formTitle) formTitle.value = c.currentTitle || '';
+    updateAvatarInitials(c.fullName);
 
-    const textMappings = [
-        'fullName',
-        'email',
-        'phone',
-        'location',
-        'currentTitle',
-        'totalExperienceMonths',
-        'professionalSummary'
-    ];
+    if (formEmail) formEmail.value = c.email || '';
+    if (formPhone) formPhone.value = c.phone || '';
+    if (formLocation) formLocation.value = c.location || '';
+    if (formYob) formYob.value = c.yearOfBirth || '';
+    if (formGender) formGender.value = c.gender || '';
+    if (formSummary) formSummary.value = c.professionalSummary || '';
 
-    textMappings.forEach((key) => {
-        const element = formFields[key];
-        const value = candidate[key] !== null && candidate[key] !== undefined ? candidate[key] : '';
-        element.value = value;
-        const requiredMissing = missing.includes(key) || (!value && ['fullName', 'email', 'phone'].includes(key));
-        triggerHighlight(element, !requiredMissing);
-    });
-
-    [
-        { key: 'linkedin', element: formFields.linkLinkedin },
-        { key: 'github', element: formFields.linkGithub },
-        { key: 'portfolio', element: formFields.linkPortfolio }
-    ].forEach((item) => {
-        const value = links[item.key] || '';
-        item.element.value = value;
-        triggerHighlight(item.element, Boolean(value));
-    });
-
-    fillPills(candidate.skills, formFields.skills, 'Chưa có dữ liệu kỹ năng');
-    fillPills(candidate.languages, formFields.languages, 'Chưa có dữ liệu ngoại ngữ');
-    fillExperience(record.workExperience || []);
-    fillCards(record.projects, formFields.projects, 'Chưa có dữ liệu dự án', renderProject);
-    fillCards(record.education, formFields.education, 'Chưa có dữ liệu học vấn', renderEducation);
-    fillCards(record.certifications, formFields.certifications, 'Chưa có dữ liệu chứng chỉ', renderCertification);
-}
-
-function fillPills(list, container, emptyMsg) {
-    container.innerHTML = '';
-    if (Array.isArray(list) && list.length > 0) {
-        triggerHighlight(container, true);
-        list.forEach((item) => {
-            const span = document.createElement('span');
-            span.className = 'tag-yody';
-            span.textContent = item;
-            container.appendChild(span);
-        });
-        return;
+    // Kỹ năng & Ngoại ngữ
+    if (formSkillsTech) {
+        const techSkills = Array.isArray(c.technicalSkills) ? c.technicalSkills : (Array.isArray(c.skills) ? c.skills : []);
+        formSkillsTech.value = techSkills.join(', ');
+    }
+    if (formSkillsSoft) {
+        const softSkills = Array.isArray(c.softSkills) ? c.softSkills : [];
+        formSkillsSoft.value = softSkills.join(', ');
+    }
+    if (formSkillsLang) {
+        const langs = Array.isArray(c.languages) ? c.languages : [];
+        formSkillsLang.value = langs.join(', ');
     }
 
-    triggerHighlight(container, false);
-    container.innerHTML = `<span style="color:var(--color-ink-3); font-weight:700;">${escapeHtml(emptyMsg)}</span>`;
+    // Liên kết mạng xã hội
+    renderSocialLinks(c.socialLinks || []);
+
+    // Kinh nghiệm làm việc
+    renderExperienceTimeline(record.workExperience || []);
+
+    // Dự án tiêu biểu
+    renderProjects(record.projects || []);
+
+    // Học vấn & Bằng cấp
+    renderEducation(record.education || []);
+
+    // Chứng chỉ & Giấy phép
+    renderCertificates(record.certifications || []);
+
+    // Giải thưởng
+    renderAwards(record.awards || []);
+
+    // Hoạt động ngoại khóa
+    renderActivities(record.volunteerActivities || []);
+
+    // Người tham chiếu
+    renderReferences(record.references || []);
 }
 
-function fillExperience(list) {
-    const container = formFields.workExperience;
-    container.innerHTML = '';
+// Vẽ danh sách liên kết mạng xã hội
+function renderSocialLinks(links) {
+    if (!formSocialLinks) return;
+    formSocialLinks.innerHTML = '';
 
-    if (!Array.isArray(list) || list.length === 0) {
-        triggerHighlight(container, false);
-        container.innerHTML = '<div style="color:var(--color-ink-3); font-weight:700;">Chưa có dữ liệu kinh nghiệm</div>';
-        return;
-    }
+    const list = Array.isArray(links) && links.length > 0 ? links : [{ platform: '', url: '' }];
+    list.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'social-link-row';
+        row.style.cssText = 'display: flex; gap: var(--space-xs); margin-bottom: var(--space-xs); align-items: center;';
+        row.innerHTML = `
+            <input type="text" class="form-input font-mono social-platform" style="width: 140px;" placeholder="Nền tảng (VD: LinkedIn)" value="${escapeHtml(item.platform || '')}">
+            <input type="url" class="form-input font-mono social-url" style="flex: 1;" placeholder="Đường dẫn URL" value="${escapeHtml(item.url || '')}">
+            <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-social" title="Xóa">✕</button>
+        `;
+        row.querySelector('.btn-remove-social').addEventListener('click', () => row.remove());
+        formSocialLinks.appendChild(row);
+    });
+}
 
-    triggerHighlight(container, true);
-    list.forEach((exp) => {
+// Thêm hàng liên kết mới
+function addSocialLinkRow(platform = '', url = '') {
+    if (!formSocialLinks) return;
+    const row = document.createElement('div');
+    row.className = 'social-link-row';
+    row.style.cssText = 'display: flex; gap: var(--space-xs); margin-bottom: var(--space-xs); align-items: center;';
+    row.innerHTML = `
+        <input type="text" class="form-input font-mono social-platform" style="width: 140px;" placeholder="Nền tảng (VD: GitHub)" value="${escapeHtml(platform)}">
+        <input type="url" class="form-input font-mono social-url" style="flex: 1;" placeholder="Đường dẫn URL" value="${escapeHtml(url)}">
+        <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-social" title="Xóa">✕</button>
+    `;
+    row.querySelector('.btn-remove-social').addEventListener('click', () => row.remove());
+    formSocialLinks.appendChild(row);
+}
+
+// Vẽ dòng thời gian kinh nghiệm làm việc
+function renderExperienceTimeline(experiences) {
+    if (!formExperience) return;
+    formExperience.innerHTML = '';
+
+    const list = Array.isArray(experiences) ? experiences : [];
+    list.forEach((exp, index) => {
         const item = document.createElement('div');
         item.className = 'timeline-item';
         item.innerHTML = `
             <div class="timeline-dot"></div>
-            <div class="card-yody">
-                <div class="font-display" style="font-weight:800;">${escapeHtml(exp.title || 'Chưa rõ chức danh')}</div>
-                <div style="margin-top:0.25rem; color:var(--color-accent); font-weight:700;">
-                    ${escapeHtml(exp.company || 'Công ty?')}
-                    <span style="color:var(--color-ink-3); font-weight:600;"> · ${escapeHtml(exp.startDate || '?')} - ${escapeHtml(exp.endDate || 'Hiện tại')}</span>
+            <div class="timeline-content">
+                <div class="timeline-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="font-size: 13px; color: var(--brand);">Kinh nghiệm #${index + 1}</strong>
+                    <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-exp" title="Xóa kinh nghiệm này">✕</button>
                 </div>
-                ${exp.description ? `<p style="margin:0.5rem 0 0; color:var(--color-ink-2); line-height:1.65;">${escapeHtml(exp.description)}</p>` : ''}
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-xs); margin-bottom: 8px;">
+                    <div class="form-group">
+                        <label class="form-label required">Vị trí / Chức danh</label>
+                        <input type="text" class="form-input exp-title" value="${escapeHtml(exp.title || '')}" placeholder="Chức danh công việc">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Công ty / Tổ chức</label>
+                        <input type="text" class="form-input exp-company" value="${escapeHtml(exp.company || '')}" placeholder="Tên công ty">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Thời gian bắt đầu</label>
+                        <input type="text" class="form-input exp-start" value="${escapeHtml(exp.startDate || '')}" placeholder="MM/YYYY">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Thời gian kết thúc</label>
+                        <input type="text" class="form-input exp-end" value="${escapeHtml(exp.endDate || '')}" placeholder="MM/YYYY hoặc Hiện tại">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mô tả trách nhiệm & thành tích</label>
+                    <textarea class="form-textarea exp-desc" rows="3" placeholder="Chi tiết công việc và kết quả đạt được...">${escapeHtml(exp.description || '')}</textarea>
+                </div>
             </div>
         `;
-        container.appendChild(item);
+        item.querySelector('.btn-remove-exp').addEventListener('click', () => item.remove());
+        formExperience.appendChild(item);
     });
 }
 
-function fillCards(list, container, emptyMsg, renderHtml) {
-    container.innerHTML = '';
-    if (Array.isArray(list) && list.length > 0) {
-        triggerHighlight(container, true);
-        list.forEach((item) => {
-            const div = document.createElement('div');
-            div.className = 'card-yody';
-            div.innerHTML = renderHtml(item);
-            container.appendChild(div);
-        });
-        return;
+// Thêm thẻ kinh nghiệm làm việc mới
+function addExperienceItem() {
+    if (!formExperience) return;
+    const count = formExperience.querySelectorAll('.timeline-item').length + 1;
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
+    item.innerHTML = `
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+            <div class="timeline-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 13px; color: var(--brand);">Kinh nghiệm #${count}</strong>
+                <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-exp" title="Xóa">✕</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-xs); margin-bottom: 8px;">
+                <div class="form-group">
+                    <label class="form-label required">Vị trí / Chức danh</label>
+                    <input type="text" class="form-input exp-title" placeholder="Chức danh công việc">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Công ty / Tổ chức</label>
+                    <input type="text" class="form-input exp-company" placeholder="Tên công ty">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thời gian bắt đầu</label>
+                    <input type="text" class="form-input exp-start" placeholder="MM/YYYY">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thời gian kết thúc</label>
+                    <input type="text" class="form-input exp-end" placeholder="Hiện tại">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mô tả trách nhiệm & thành tích</label>
+                <textarea class="form-textarea exp-desc" rows="3" placeholder="Chi tiết công việc..."></textarea>
+            </div>
+        </div>
+    `;
+    item.querySelector('.btn-remove-exp').addEventListener('click', () => item.remove());
+    formExperience.appendChild(item);
+}
+
+// Vẽ danh sách dự án tiêu biểu
+function renderProjects(projects) {
+    if (!formProjects) return;
+    formProjects.innerHTML = '';
+
+    const list = Array.isArray(projects) ? projects : [];
+    list.forEach((proj, idx) => {
+        const item = document.createElement('div');
+        item.className = 'project-entry-card';
+        item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+        const techs = Array.isArray(proj.technologies) ? proj.technologies.join(', ') : (proj.technologies || '');
+        item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="font-size: 12.5px; color: var(--brand);">Dự án #${idx + 1}</strong>
+                <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-proj">✕</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-xs); margin-bottom: 6px;">
+                <div class="form-group">
+                    <label class="form-label required">Tên dự án</label>
+                    <input type="text" class="form-input proj-name" value="${escapeHtml(proj.name || '')}" placeholder="Tên dự án">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vai trò</label>
+                    <input type="text" class="form-input proj-role" value="${escapeHtml(proj.role || '')}" placeholder="Vai trò trong dự án">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Công nghệ / Kỹ năng</label>
+                    <input type="text" class="form-input proj-tech" value="${escapeHtml(techs)}" placeholder="Công nghệ sử dụng">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Liên kết URL</label>
+                    <input type="url" class="form-input proj-url" value="${escapeHtml(proj.url || '')}" placeholder="https://...">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mô tả dự án</label>
+                <textarea class="form-textarea proj-desc" rows="2" placeholder="Chi tiết dự án...">${escapeHtml(proj.description || '')}</textarea>
+            </div>
+        `;
+        item.querySelector('.btn-remove-proj').addEventListener('click', () => item.remove());
+        formProjects.appendChild(item);
+    });
+}
+
+// Thêm thẻ dự án mới
+function addProjectItem() {
+    if (!formProjects) return;
+    const count = formProjects.querySelectorAll('.project-entry-card').length + 1;
+    const item = document.createElement('div');
+    item.className = 'project-entry-card';
+    item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+    item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="font-size: 12.5px; color: var(--brand);">Dự án #${count}</strong>
+            <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-proj">✕</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-xs); margin-bottom: 6px;">
+            <div class="form-group">
+                <label class="form-label required">Tên dự án</label>
+                <input type="text" class="form-input proj-name" placeholder="Tên dự án">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Vai trò</label>
+                <input type="text" class="form-input proj-role" placeholder="Vai trò">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Công nghệ / Kỹ năng</label>
+                <input type="text" class="form-input proj-tech" placeholder="Công nghệ sử dụng">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Liên kết URL</label>
+                <input type="url" class="form-input proj-url" placeholder="https://...">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Mô tả dự án</label>
+            <textarea class="form-textarea proj-desc" rows="2" placeholder="Chi tiết dự án..."></textarea>
+        </div>
+    `;
+    item.querySelector('.btn-remove-proj').addEventListener('click', () => item.remove());
+    formProjects.appendChild(item);
+}
+
+// Vẽ danh sách học vấn & bằng cấp
+function renderEducation(educations) {
+    if (!formEducation) return;
+    formEducation.innerHTML = '';
+
+    const list = Array.isArray(educations) ? educations : [];
+    list.forEach((edu, idx) => {
+        const item = document.createElement('div');
+        item.className = 'edu-entry-card';
+        item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+        item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="font-size: 12.5px; color: var(--brand);">Học vấn #${idx + 1}</strong>
+                <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-edu">✕</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs);">
+                <div class="form-group">
+                    <label class="form-label required">Trường / Cơ sở đào tạo</label>
+                    <input type="text" class="form-input edu-inst" value="${escapeHtml(edu.institution || '')}" placeholder="Tên trường học">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bằng cấp / Trình độ</label>
+                    <input type="text" class="form-input edu-degree" value="${escapeHtml(edu.degree || '')}" placeholder="VD: Cử nhân, Kỹ sư...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Chuyên ngành</label>
+                    <input type="text" class="form-input edu-field" value="${escapeHtml(edu.fieldOfStudy || '')}" placeholder="VD: Quản trị Kinh doanh">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thời gian</label>
+                    <input type="text" class="form-input edu-time" value="${escapeHtml((edu.startDate || '') + (edu.endDate ? ' - ' + edu.endDate : ''))}" placeholder="2018 - 2022">
+                </div>
+            </div>
+        `;
+        item.querySelector('.btn-remove-edu').addEventListener('click', () => item.remove());
+        formEducation.appendChild(item);
+    });
+}
+
+// Thêm thẻ học vấn mới
+function addEducationItem() {
+    if (!formEducation) return;
+    const count = formEducation.querySelectorAll('.edu-entry-card').length + 1;
+    const item = document.createElement('div');
+    item.className = 'edu-entry-card';
+    item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+    item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="font-size: 12.5px; color: var(--brand);">Học vấn #${count}</strong>
+            <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-edu">✕</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs);">
+            <div class="form-group">
+                <label class="form-label required">Trường / Cơ sở đào tạo</label>
+                <input type="text" class="form-input edu-inst" placeholder="Tên trường học">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Bằng cấp</label>
+                <input type="text" class="form-input edu-degree" placeholder="Cử nhân / Kỹ sư">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Chuyên ngành</label>
+                <input type="text" class="form-input edu-field" placeholder="Chuyên ngành">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Thời gian</label>
+                <input type="text" class="form-input edu-time" placeholder="YYYY - YYYY">
+            </div>
+        </div>
+    `;
+    item.querySelector('.btn-remove-edu').addEventListener('click', () => item.remove());
+    formEducation.appendChild(item);
+}
+
+// Vẽ danh sách chứng chỉ
+function renderCertificates(certs) {
+    if (!formCertificates) return;
+    formCertificates.innerHTML = '';
+
+    const list = Array.isArray(certs) ? certs : [];
+    list.forEach((cert, idx) => {
+        const item = document.createElement('div');
+        item.className = 'cert-entry-card';
+        item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+        item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="font-size: 12.5px; color: var(--brand);">Chứng chỉ #${idx + 1}</strong>
+                <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-cert">✕</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs);">
+                <div class="form-group">
+                    <label class="form-label required">Tên chứng chỉ</label>
+                    <input type="text" class="form-input cert-name" value="${escapeHtml(cert.name || '')}" placeholder="Tên chứng chỉ">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tổ chức cấp</label>
+                    <input type="text" class="form-input cert-issuer" value="${escapeHtml(cert.issuer || '')}" placeholder="Đơn vị cấp">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ngày cấp</label>
+                    <input type="text" class="form-input cert-date" value="${escapeHtml(cert.issueDate || '')}" placeholder="MM/YYYY">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Đường dẫn xác thực</label>
+                    <input type="url" class="form-input cert-url" value="${escapeHtml(cert.credentialUrl || '')}" placeholder="https://...">
+                </div>
+            </div>
+        `;
+        item.querySelector('.btn-remove-cert').addEventListener('click', () => item.remove());
+        formCertificates.appendChild(item);
+    });
+}
+
+// Thêm thẻ chứng chỉ mới
+function addCertificateItem() {
+    if (!formCertificates) return;
+    const count = formCertificates.querySelectorAll('.cert-entry-card').length + 1;
+    const item = document.createElement('div');
+    item.className = 'cert-entry-card';
+    item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+    item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="font-size: 12.5px; color: var(--brand);">Chứng chỉ #${count}</strong>
+            <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-cert">✕</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs);">
+            <div class="form-group">
+                <label class="form-label required">Tên chứng chỉ</label>
+                <input type="text" class="form-input cert-name" placeholder="Tên chứng chỉ">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tổ chức cấp</label>
+                <input type="text" class="form-input cert-issuer" placeholder="Đơn vị cấp">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Ngày cấp</label>
+                <input type="text" class="form-input cert-date" placeholder="MM/YYYY">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Đường dẫn xác thực</label>
+                <input type="url" class="form-input cert-url" placeholder="https://...">
+            </div>
+        </div>
+    `;
+    item.querySelector('.btn-remove-cert').addEventListener('click', () => item.remove());
+    formCertificates.appendChild(item);
+}
+
+// Vẽ danh sách giải thưởng
+function renderAwards(awards) {
+    if (!formAwards) return;
+    formAwards.innerHTML = '';
+
+    const list = Array.isArray(awards) ? awards : [];
+    list.forEach((awd, idx) => {
+        const item = document.createElement('div');
+        item.className = 'award-entry-card';
+        item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+        item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="font-size: 12.5px; color: var(--brand);">Giải thưởng #${idx + 1}</strong>
+                <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-award">✕</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs); margin-bottom: 6px;">
+                <div class="form-group">
+                    <label class="form-label required">Tên giải thưởng</label>
+                    <input type="text" class="form-input awd-title" value="${escapeHtml(awd.title || '')}" placeholder="Tên giải thưởng">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Đơn vị trao giải</label>
+                    <input type="text" class="form-input awd-issuer" value="${escapeHtml(awd.issuer || '')}" placeholder="Tổ chức / Doanh nghiệp">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thời gian</label>
+                    <input type="text" class="form-input awd-date" value="${escapeHtml(awd.issueDate || '')}" placeholder="YYYY">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mô tả giải thưởng</label>
+                <input type="text" class="form-input awd-desc" value="${escapeHtml(awd.description || '')}" placeholder="Chi tiết giải thưởng...">
+            </div>
+        `;
+        item.querySelector('.btn-remove-award').addEventListener('click', () => item.remove());
+        formAwards.appendChild(item);
+    });
+}
+
+// Thêm thẻ giải thưởng mới
+function addAwardItem() {
+    if (!formAwards) return;
+    const count = formAwards.querySelectorAll('.award-entry-card').length + 1;
+    const item = document.createElement('div');
+    item.className = 'award-entry-card';
+    item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+    item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="font-size: 12.5px; color: var(--brand);">Giải thưởng #${count}</strong>
+            <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-award">✕</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs); margin-bottom: 6px;">
+            <div class="form-group">
+                <label class="form-label required">Tên giải thưởng</label>
+                <input type="text" class="form-input awd-title" placeholder="Tên giải thưởng">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Đơn vị trao giải</label>
+                <input type="text" class="form-input awd-issuer" placeholder="Tổ chức trao giải">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Thời gian</label>
+                <input type="text" class="form-input awd-date" placeholder="YYYY">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Mô tả giải thưởng</label>
+            <input type="text" class="form-input awd-desc" placeholder="Chi tiết...">
+        </div>
+    `;
+    item.querySelector('.btn-remove-award').addEventListener('click', () => item.remove());
+    formAwards.appendChild(item);
+}
+
+// Vẽ danh sách hoạt động ngoại khóa
+function renderActivities(activities) {
+    if (!formActivities) return;
+    formActivities.innerHTML = '';
+
+    const list = Array.isArray(activities) ? activities : [];
+    list.forEach((act, idx) => {
+        const item = document.createElement('div');
+        item.className = 'act-entry-card';
+        item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+        item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="font-size: 12.5px; color: var(--brand);">Hoạt động #${idx + 1}</strong>
+                <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-act">✕</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs); margin-bottom: 6px;">
+                <div class="form-group">
+                    <label class="form-label required">Tổ chức / CLB</label>
+                    <input type="text" class="form-input act-org" value="${escapeHtml(act.organization || '')}" placeholder="Tên tổ chức">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vai trò</label>
+                    <input type="text" class="form-input act-role" value="${escapeHtml(act.role || '')}" placeholder="Vai trò">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thời gian</label>
+                    <input type="text" class="form-input act-time" value="${escapeHtml((act.startDate || '') + (act.endDate ? ' - ' + act.endDate : ''))}" placeholder="MM/YYYY - MM/YYYY">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mô tả hoạt động</label>
+                <textarea class="form-textarea act-desc" rows="2" placeholder="Chi tiết hoạt động...">${escapeHtml(act.description || '')}</textarea>
+            </div>
+        `;
+        item.querySelector('.btn-remove-act').addEventListener('click', () => item.remove());
+        formActivities.appendChild(item);
+    });
+}
+
+// Thêm thẻ hoạt động mới
+function addActivityItem() {
+    if (!formActivities) return;
+    const count = formActivities.querySelectorAll('.act-entry-card').length + 1;
+    const item = document.createElement('div');
+    item.className = 'act-entry-card';
+    item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+    item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="font-size: 12.5px; color: var(--brand);">Hoạt động #${count}</strong>
+            <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-act">✕</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs); margin-bottom: 6px;">
+            <div class="form-group">
+                <label class="form-label required">Tổ chức / CLB</label>
+                <input type="text" class="form-input act-org" placeholder="Tên tổ chức">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Vai trò</label>
+                <input type="text" class="form-input act-role" placeholder="Vai trò">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Thời gian</label>
+                <input type="text" class="form-input act-time" placeholder="MM/YYYY - MM/YYYY">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Mô tả hoạt động</label>
+            <textarea class="form-textarea act-desc" rows="2" placeholder="Chi tiết hoạt động..."></textarea>
+        </div>
+    `;
+    item.querySelector('.btn-remove-act').addEventListener('click', () => item.remove());
+    formActivities.appendChild(item);
+}
+
+// Vẽ danh sách người tham chiếu
+function renderReferences(refs) {
+    if (!formReferences) return;
+    formReferences.innerHTML = '';
+
+    const list = Array.isArray(refs) ? refs : [];
+    list.forEach((ref, idx) => {
+        const item = document.createElement('div');
+        item.className = 'ref-entry-card';
+        item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+        item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="font-size: 12.5px; color: var(--brand);">Người tham chiếu #${idx + 1}</strong>
+                <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-ref">✕</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs);">
+                <div class="form-group">
+                    <label class="form-label required">Họ và tên</label>
+                    <input type="text" class="form-input ref-name" value="${escapeHtml(ref.name || '')}" placeholder="Họ và tên">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Chức vụ & Công ty</label>
+                    <input type="text" class="form-input ref-title" value="${escapeHtml((ref.title || '') + (ref.company ? ' - ' + ref.company : ''))}" placeholder="Chức vụ, Công ty">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input ref-email" value="${escapeHtml(ref.email || '')}" placeholder="email@...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="tel" class="form-input ref-phone" value="${escapeHtml(ref.phone || '')}" placeholder="+84 ...">
+                </div>
+            </div>
+        `;
+        item.querySelector('.btn-remove-ref').addEventListener('click', () => item.remove());
+        formReferences.appendChild(item);
+    });
+}
+
+// Thêm thẻ người tham chiếu mới
+function addReferenceItem() {
+    if (!formReferences) return;
+    const count = formReferences.querySelectorAll('.ref-entry-card').length + 1;
+    const item = document.createElement('div');
+    item.className = 'ref-entry-card';
+    item.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-sm); background: var(--bg-2);';
+    item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="font-size: 12.5px; color: var(--brand);">Người tham chiếu #${count}</strong>
+            <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-ref">✕</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-xs);">
+            <div class="form-group">
+                <label class="form-label required">Họ và tên</label>
+                <input type="text" class="form-input ref-name" placeholder="Họ và tên">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Chức vụ & Công ty</label>
+                <input type="text" class="form-input ref-title" placeholder="Chức vụ, Công ty">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input ref-email" placeholder="email@...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Số điện thoại</label>
+                <input type="tel" class="form-input ref-phone" placeholder="+84 ...">
+            </div>
+        </div>
+    `;
+    item.querySelector('.btn-remove-ref').addEventListener('click', () => item.remove());
+    formReferences.appendChild(item);
+}
+
+// Thu thập toàn bộ dữ liệu từ form hiện tại
+function collectFormData() {
+    const record = currentCandidateRecord ? JSON.parse(JSON.stringify(currentCandidateRecord)) : {};
+    if (!record.candidate) record.candidate = {};
+
+    record.candidate.fullName = formName ? formName.value.trim() : '';
+    record.candidate.currentTitle = formTitle ? formTitle.value.trim() : '';
+    record.candidate.email = formEmail ? formEmail.value.trim() : '';
+    record.candidate.phone = formPhone ? formPhone.value.trim() : '';
+    record.candidate.location = formLocation ? formLocation.value.trim() : '';
+    record.candidate.yearOfBirth = formYob && formYob.value ? parseInt(formYob.value, 10) : null;
+    record.candidate.gender = formGender ? formGender.value : '';
+    record.candidate.professionalSummary = formSummary ? formSummary.value.trim() : '';
+
+    // Thu thập kỹ năng
+    const parseList = (str) => str ? str.split(',').map(s => s.trim()).filter(Boolean) : [];
+    if (formSkillsTech) record.candidate.technicalSkills = parseList(formSkillsTech.value);
+    if (formSkillsSoft) record.candidate.softSkills = parseList(formSkillsSoft.value);
+    if (formSkillsLang) record.candidate.languages = parseList(formSkillsLang.value);
+    record.candidate.skills = record.candidate.technicalSkills;
+
+    // Thu thập liên kết mạng xã hội
+    if (formSocialLinks) {
+        const rows = formSocialLinks.querySelectorAll('.social-link-row');
+        record.candidate.socialLinks = Array.from(rows).map(row => ({
+            platform: row.querySelector('.social-platform')?.value.trim() || '',
+            url: row.querySelector('.social-url')?.value.trim() || ''
+        })).filter(item => item.platform || item.url);
     }
 
-    triggerHighlight(container, false);
-    container.innerHTML = `<div style="color:var(--color-ink-3); font-weight:700;">${escapeHtml(emptyMsg)}</div>`;
+    // Thu thập kinh nghiệm
+    if (formExperience) {
+        const items = formExperience.querySelectorAll('.timeline-item');
+        record.workExperience = Array.from(items).map(item => ({
+            title: item.querySelector('.exp-title')?.value.trim() || '',
+            company: item.querySelector('.exp-company')?.value.trim() || '',
+            startDate: item.querySelector('.exp-start')?.value.trim() || '',
+            endDate: item.querySelector('.exp-end')?.value.trim() || '',
+            description: item.querySelector('.exp-desc')?.value.trim() || ''
+        })).filter(exp => exp.title || exp.company);
+    }
+
+    // Thu thập dự án
+    if (formProjects) {
+        const items = formProjects.querySelectorAll('.project-entry-card');
+        record.projects = Array.from(items).map(item => ({
+            name: item.querySelector('.proj-name')?.value.trim() || '',
+            role: item.querySelector('.proj-role')?.value.trim() || '',
+            technologies: parseList(item.querySelector('.proj-tech')?.value || ''),
+            url: item.querySelector('.proj-url')?.value.trim() || '',
+            description: item.querySelector('.proj-desc')?.value.trim() || ''
+        })).filter(p => p.name);
+    }
+
+    // Thu thập học vấn
+    if (formEducation) {
+        const items = formEducation.querySelectorAll('.edu-entry-card');
+        record.education = Array.from(items).map(item => ({
+            institution: item.querySelector('.edu-inst')?.value.trim() || '',
+            degree: item.querySelector('.edu-degree')?.value.trim() || '',
+            fieldOfStudy: item.querySelector('.edu-field')?.value.trim() || '',
+            startDate: item.querySelector('.edu-time')?.value.trim() || '',
+            endDate: ''
+        })).filter(e => e.institution);
+    }
+
+    // Thu thập chứng chỉ
+    if (formCertificates) {
+        const items = formCertificates.querySelectorAll('.cert-entry-card');
+        record.certifications = Array.from(items).map(item => ({
+            name: item.querySelector('.cert-name')?.value.trim() || '',
+            issuer: item.querySelector('.cert-issuer')?.value.trim() || '',
+            issueDate: item.querySelector('.cert-date')?.value.trim() || '',
+            credentialUrl: item.querySelector('.cert-url')?.value.trim() || ''
+        })).filter(c => c.name);
+    }
+
+    // Thu thập giải thưởng
+    if (formAwards) {
+        const items = formAwards.querySelectorAll('.award-entry-card');
+        record.awards = Array.from(items).map(item => ({
+            title: item.querySelector('.awd-title')?.value.trim() || '',
+            issuer: item.querySelector('.awd-issuer')?.value.trim() || '',
+            issueDate: item.querySelector('.awd-date')?.value.trim() || '',
+            description: item.querySelector('.awd-desc')?.value.trim() || ''
+        })).filter(a => a.title);
+    }
+
+    // Thu thập hoạt động ngoại khóa
+    if (formActivities) {
+        const items = formActivities.querySelectorAll('.act-entry-card');
+        record.volunteerActivities = Array.from(items).map(item => ({
+            organization: item.querySelector('.act-org')?.value.trim() || '',
+            role: item.querySelector('.act-role')?.value.trim() || '',
+            startDate: item.querySelector('.act-time')?.value.trim() || '',
+            endDate: '',
+            description: item.querySelector('.act-desc')?.value.trim() || ''
+        })).filter(act => act.organization);
+    }
+
+    // Thu thập người tham chiếu
+    if (formReferences) {
+        const items = formReferences.querySelectorAll('.ref-entry-card');
+        record.references = Array.from(items).map(item => ({
+            name: item.querySelector('.ref-name')?.value.trim() || '',
+            title: item.querySelector('.ref-title')?.value.trim() || '',
+            company: '',
+            email: item.querySelector('.ref-email')?.value.trim() || '',
+            phone: item.querySelector('.ref-phone')?.value.trim() || '',
+            relationship: ''
+        })).filter(r => r.name);
+    }
+
+    return record;
 }
 
-function renderProject(project) {
-    return `
-        <div class="font-display" style="font-weight:800;">
-            ${escapeHtml(project.name || 'Tên dự án?')}
-            <span style="font-family:var(--font-body); color:var(--color-accent); font-size:var(--text-xs);">(${escapeHtml(project.role || 'Vai trò?')})</span>
-        </div>
-        <div class="font-mono" style="margin-top:0.35rem; color:var(--color-ink-3); font-size:var(--text-xs);">${escapeHtml((project.technologies || []).join(', '))}</div>
-        ${project.description ? `<p style="margin:0.5rem 0 0; color:var(--color-ink-2); line-height:1.65;">${escapeHtml(project.description)}</p>` : ''}
-    `;
+// Xử lý kéo thả file PDF CV
+if (dropzone) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+        });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files[0]) {
+            cvFileInput.files = files;
+            fileNameDisplay.textContent = files[0].name;
+            showToast(`Đã chọn file: ${files[0].name}`, 'info');
+        }
+    });
 }
 
-function renderEducation(education) {
-    return `
-        <div class="font-display" style="font-weight:800;">${escapeHtml(education.institution || 'Trường?')}</div>
-        <div style="margin-top:0.25rem; color:var(--color-accent); font-weight:700;">${escapeHtml(education.degree ? education.degree + ' - ' : '')}${escapeHtml(education.fieldOfStudy || 'Chuyên ngành?')}</div>
-        <div class="font-mono" style="margin-top:0.35rem; color:var(--color-ink-3); font-size:var(--text-xs);">${escapeHtml(education.startDate || '?')} - ${escapeHtml(education.endDate || '?')}</div>
-    `;
+// Cập nhật tên file khi chọn từ hộp thoại
+if (cvFileInput) {
+    cvFileInput.addEventListener('change', () => {
+        if (cvFileInput.files && cvFileInput.files[0]) {
+            fileNameDisplay.textContent = cvFileInput.files[0].name;
+            showToast(`Đã chọn file: ${cvFileInput.files[0].name}`, 'info');
+        }
+    });
 }
 
-function renderCertification(certification) {
-    return `
-        <div class="font-display" style="font-weight:800;">${escapeHtml(certification.name || 'Tên chứng chỉ?')}</div>
-        <div style="margin-top:0.25rem; color:var(--color-accent); font-weight:700;">${escapeHtml(certification.issuer || 'Đơn vị cấp?')} · ${escapeHtml(certification.issueDate || '?')}</div>
-    `;
+// Bắt đầu bóc tách CV qua AI
+if (extractBtn) {
+    extractBtn.addEventListener('click', async () => {
+        if (!cvFileInput || !cvFileInput.files[0]) {
+            showToast('Vui lòng chọn hoặc kéo thả 1 file PDF CV trước!', 'warning');
+            return;
+        }
+
+        const file = cvFileInput.files[0];
+        const formData = new FormData();
+        formData.append('cvFile', file);
+
+        // Hiển thị trạng thái đang xử lý
+        loadingOverlay.classList.remove('hidden');
+        extractBtn.disabled = true;
+        btnText.textContent = 'Đang trích xuất...';
+
+        const startTime = Date.now();
+        const timerInterval = setInterval(() => {
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            if (loadingTime) loadingTime.textContent = `Đang xử lý: ${elapsed}s`;
+        }, 100);
+
+        try {
+            const response = await fetch('/api/parse-cv', {
+                method: 'POST',
+                body: formData
+            });
+
+            clearInterval(timerInterval);
+            const totalElapsedMs = Date.now() - startTime;
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || `HTTP ${response.status}`);
+            }
+
+            const candidateRecord = await response.json();
+            currentCandidateRecord = candidateRecord;
+
+            // Cập nhật thông số hiệu năng
+            if (timingBanner) {
+                timingBanner.classList.remove('hidden');
+                const timings = candidateRecord._timings || {};
+                if (timeTotal) timeTotal.textContent = `${(totalElapsedMs / 1000).toFixed(2)}s`;
+                if (timePdf) timePdf.textContent = timings.pdfParseMs ? `${timings.pdfParseMs}ms` : '-';
+                if (timeGemini) timeGemini.textContent = timings.aiInferenceMs ? `${(timings.aiInferenceMs / 1000).toFixed(2)}s` : '-';
+                if (timeNetwork) {
+                    const serverMs = timings.totalServerMs || 0;
+                    const netMs = Math.max(0, totalElapsedMs - serverMs);
+                    timeNetwork.textContent = `${netMs}ms`;
+                }
+            }
+
+            // Điền toàn bộ thông tin bóc tách vào form
+            fillForm(candidateRecord);
+
+            showToast('Trích xuất hồ sơ CV thành công!', 'success');
+
+        } catch (error) {
+            clearInterval(timerInterval);
+            showToast(`Lỗi bóc tách CV: ${error.message}`, 'danger');
+        } finally {
+            loadingOverlay.classList.add('hidden');
+            extractBtn.disabled = false;
+            btnText.textContent = 'Trích xuất CV';
+        }
+    });
 }
 
-const JDTemplates = {
-    pass: `Vị trí: JUNIOR / ASSOCIATE FRONTEND ENGINEER (REACT / TYPESCRIPT / FIREBASE)
+// Lưu thay đổi hồ sơ
+if (btnSaveCandidate) {
+    btnSaveCandidate.addEventListener('click', async () => {
+        const updatedRecord = collectFormData();
+        currentCandidateRecord = updatedRecord;
 
-1. TỔNG QUAN VỊ TRÍ:
-Tham gia thiết kế, phát triển các ứng dụng Web/PWA, hệ thống thời gian thực, tích hợp dịch vụ AI APIs và hạ tầng serverless.
+        try {
+            const res = await fetch('/api/candidates/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedRecord)
+            });
 
-2. TRÁCH NHIỆM & YÊU CẦU CÔNG VIỆC:
-- Tốt nghiệp Đại học chuyên ngành Công nghệ Phần mềm / CNTT. Ưu tiên GPA >= 3.0/4.0.
-- Lập trình Web/PWA responsive với React và TypeScript.
-- Kết nối Firebase, RESTful APIs và AI API.
-- Xây dựng dashboard quản lý nhân sự, thanh toán QR, hệ thống giao tiếp real-time.
-- Quản lý mã nguồn qua Git/GitHub.
-- Ngoại ngữ: Tiếng Anh đọc hiểu tài liệu kỹ thuật tốt.
-- Điểm cộng: Có kinh nghiệm triển khai thực tế trên Vercel.`,
-    fail: `Vị trí: SENIOR JAVA & DEVOPS ENGINEER (KUBERNETES / AWS / SPRING BOOT)
+            if (res.ok) {
+                showToast('Hồ sơ ứng viên đã được lưu thành công!', 'success');
+            } else {
+                showToast('Đã lưu dữ liệu vào bộ nhớ phiên làm việc.', 'info');
+            }
+        } catch (e) {
+            showToast('Đã cập nhật hồ sơ trong bộ nhớ phiên.', 'info');
+        }
+    });
+}
 
-1. TỔNG QUAN VỊ TRÍ:
-Quản trị hạ tầng điện toán đám mây quy mô lớn và phát triển hệ thống Core Banking Microservices.
+// Làm mới toàn bộ form hồ sơ
+if (btnResetForm) {
+    btnResetForm.addEventListener('click', () => {
+        if (confirm('Bạn có chắc chắn muốn làm mới toàn bộ nội dung form không?')) {
+            currentCandidateRecord = null;
+            if (document.getElementById('candidateForm')) {
+                document.getElementById('candidateForm').reset();
+            }
+            if (formSocialLinks) formSocialLinks.innerHTML = '';
+            if (formExperience) formExperience.innerHTML = '';
+            if (formProjects) formProjects.innerHTML = '';
+            if (formEducation) formEducation.innerHTML = '';
+            if (formCertificates) formCertificates.innerHTML = '';
+            if (formAwards) formAwards.innerHTML = '';
+            if (formActivities) formActivities.innerHTML = '';
+            if (formReferences) formReferences.innerHTML = '';
+            updateAvatarInitials('');
+            if (timingBanner) timingBanner.classList.add('hidden');
+            if (fileNameDisplay) fileNameDisplay.textContent = 'hoặc bấm để chọn file (tối đa 10MB)';
+            if (cvFileInput) cvFileInput.value = '';
+            showToast('Đã làm mới form hồ sơ.', 'info');
+        }
+    });
+}
 
-2. TRÁCH NHIỆM & YÊU CẦU CÔNG VIỆC:
-- Tối thiểu 6 năm kinh nghiệm Java Spring Boot, Microservices Architecture.
-- Quản trị Cloud AWS, Kubernetes, Docker Cluster, Terraform, Ansible.
-- Tối ưu hóa CSDL phân tán PostgreSQL, Oracle và Distributed Caching.
-- Bắt buộc có chứng chỉ AWS Certified Solutions Architect Professional hoặc CKA.
-- Ngoại ngữ: Tiếng Trung thành thạo HSK 5 trở lên.
-- Tối thiểu 3 năm kinh nghiệm ở vị trí Tech Lead / Manager quản lý từ 10 nhân sự.`
+// Đăng ký sự kiện các nút thêm dòng động
+document.getElementById('btnAddSocial')?.addEventListener('click', () => addSocialLinkRow());
+document.getElementById('btnAddExperience')?.addEventListener('click', () => addExperienceItem());
+document.getElementById('btnAddProject')?.addEventListener('click', () => addProjectItem());
+document.getElementById('btnAddEducation')?.addEventListener('click', () => addEducationItem());
+document.getElementById('btnAddCert')?.addEventListener('click', () => addCertificateItem());
+document.getElementById('btnAddAward')?.addEventListener('click', () => addAwardItem());
+document.getElementById('btnAddActivity')?.addEventListener('click', () => addActivityItem());
+document.getElementById('btnAddReference')?.addEventListener('click', () => addReferenceItem());
+
+// Cập nhật tên avatar khi người dùng gõ họ tên
+formName?.addEventListener('input', (e) => updateAvatarInitials(e.target.value));
+
+// Mẫu JD thử nghiệm
+const JD_TEMPLATES = {
+    pass: `Vị trí: Senior Procurement Specialist (Chuyên viên Mua sắm Cấp cao)
+Địa điểm: Hà Nội / Bắc Ninh
+Mức lương: 25.000.000 - 35.000.000 VNĐ
+
+Mô tả công việc:
+- Quản lý mua sắm thiết bị CAPEX, vật tư và dịch vụ phụ trợ cho nhà máy may mặc / công nghệ cao.
+- Tìm kiếm, đánh giá và quản lý mạng lưới nhà cung cấp trong và ngoài nước (Trung Quốc, Đài Loan, Việt Nam).
+- Đàm phán điều khoản hợp đồng, giá cả và thời hạn thanh toán để tối ưu chi phí (Cost optimization).
+- Phối hợp với phòng Kế toán và Kho vận trên hệ thống SAP ERP.
+
+Yêu cầu ứng viên:
+- Tối thiểu 5 năm kinh nghiệm trong lĩnh vực Mua sắm (Procurement / Purchasing / Sourcing).
+- Thành thạo phần mềm SAP ERP (phân hệ MM) và Excel phân tích dữ liệu.
+- Kỹ năng đàm phán, thương lượng hợp đồng xuất sắc.
+- Tiếng Anh giao tiếp tốt trong công việc.
+- Tốt nghiệp Đại học khối ngành Kinh tế, Ngoại thương, Thương mại hoặc tương đương.`,
+
+    fail: `Vị trí: Senior DevOps / Cloud Infrastructure Engineer
+Địa điểm: TP. Hồ Chí Minh
+Mức lương: $2,500 - $3,500
+
+Mô tả công việc:
+- Thiết kế, triển khai và vận hành hạ tầng Kubernetes trên AWS / GCP.
+- Xây dựng hệ thống CI/CD pipeline tự động hóa với GitLab CI, Terraform và Ansible.
+- Giám sát hiệu năng hệ thống với Prometheus, Grafana, ELK Stack.
+- Đảm bảo tính sẵn sàng cao (High Availability) và bảo mật cho hệ thống microservices.
+
+Yêu cầu ứng viên:
+- Tối thiểu 5 năm kinh nghiệm chuyên sâu về DevOps và Cloud Architecture.
+- Thành thạo Docker, Kubernetes, Terraform, Helm.
+- Có kinh nghiệm lập trình Go hoặc Python phục vụ tự động hóa hạ tầng.
+- Đạt các chứng chỉ AWS Solutions Architect Professional hoặc CKA là lợi thế lớn.`
 };
 
-document.querySelectorAll('.jd-template-btn').forEach((button) => {
-    button.addEventListener('click', (event) => {
-        const type = event.currentTarget.dataset.type;
-        if (JDTemplates[type]) {
-            document.getElementById('jdInput').value = JDTemplates[type];
+// Đăng ký sự kiện chọn mẫu JD
+document.querySelectorAll('.jd-template-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const type = btn.getAttribute('data-type');
+        if (JD_TEMPLATES[type] && jdInput) {
+            jdInput.value = JD_TEMPLATES[type];
+            showToast(`Đã áp dụng mẫu JD: ${type === 'pass' ? 'Procurement' : 'DevOps'}`, 'info');
         }
     });
 });
 
-const toggleJdExpandBtn = document.getElementById('toggleJdExpand');
-const jdModal = document.getElementById('jdModal');
-const closeJdModalBtn = document.getElementById('closeJdModal');
-const saveJdModalBtn = document.getElementById('saveJdModal');
-const modalJdInput = document.getElementById('modalJdInput');
-
-toggleJdExpandBtn.addEventListener('click', () => {
-    modalJdInput.value = document.getElementById('jdInput').value;
-    jdModal.classList.remove('hidden');
-});
-
-closeJdModalBtn.addEventListener('click', () => {
-    jdModal.classList.add('hidden');
-});
-
-saveJdModalBtn.addEventListener('click', () => {
-    document.getElementById('jdInput').value = modalJdInput.value;
-    jdModal.classList.add('hidden');
-});
-
-document.getElementById('matchBtn').addEventListener('click', async () => {
-    const jdText = document.getElementById('jdInput').value.trim();
-    if (!jdText) {
-        alert('Vui lòng nhập yêu cầu công việc.');
-        return;
-    }
-    if (!currentCandidateRecord) {
-        alert('Vui lòng trích xuất CV trước khi chấm điểm.');
-        return;
-    }
-
-    const button = document.getElementById('matchBtn');
-    button.disabled = true;
-    const startMatchTime = Date.now();
-    button.innerHTML = '<span>Đang phân tích... (0.0s)</span>';
-
-    const matchTimer = setInterval(() => {
-        const elapsed = ((Date.now() - startMatchTime) / 1000).toFixed(1);
-        button.innerHTML = `<span>Đang phân tích... (${elapsed}s)</span>`;
-    }, 100);
-
-    try {
-        const response = await fetch(apiUrl('/api/match-jd'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                candidateRecord: currentCandidateRecord,
-                jobDescription: jdText
-            })
-        });
-
-        const matchResult = await readJsonResponse(response, 'Không thể chấm điểm JD.');
-        renderMatchResult(matchResult);
-    } catch (error) {
-        alert('Đã xảy ra lỗi: ' + error.message);
-    } finally {
-        clearInterval(matchTimer);
-        button.disabled = false;
-        button.innerHTML = '<span>Chấm điểm độ phù hợp</span>';
-    }
-});
-
-function renderMatchResult(matchResult) {
-    const matchResultEl = document.getElementById('matchResult');
-    matchResultEl.classList.remove('hidden');
-    setTimeout(() => {
-        matchResultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 50);
-
-    const score = Number(matchResult.score || 0);
-    document.getElementById('scoreText').textContent = score + '%';
-    document.getElementById('scorePath').setAttribute('stroke-dasharray', `${score}, 100`);
-
-    const badge = document.getElementById('recommendationBadge');
-    const reasonBox = document.getElementById('reasonBox');
-    const reasonTitle = document.getElementById('reasonTitle');
-    const reasonIcon = document.getElementById('reasonIcon');
-    const reasonText = document.getElementById('reasonText');
-
-    badge.textContent = matchResult.recommendation || 'Chưa có khuyến nghị';
-    reasonText.textContent = matchResult.reason || 'Chưa có thông tin đánh giá.';
-
-    badge.className = 'conf-badge';
-    reasonBox.className = 'reason-box';
-    reasonTitle.style.color = '';
-    reasonIcon.textContent = '';
-
-    if (score >= 80) {
-        badge.classList.add('conf-high');
-        reasonBox.style.background = 'var(--color-success-soft)';
-        reasonBox.style.borderColor = 'var(--color-success)';
-        reasonTitle.style.color = 'var(--color-success)';
-        reasonIcon.textContent = '✓';
-    } else if (score >= 50) {
-        badge.classList.add('conf-med');
-        reasonBox.style.background = 'var(--color-warning-soft)';
-        reasonBox.style.borderColor = 'var(--color-warning)';
-        reasonTitle.style.color = 'color-mix(in oklch, var(--color-warning) 70%, var(--color-ink))';
-        reasonIcon.textContent = '!';
-    } else {
-        badge.classList.add('conf-low');
-        reasonBox.style.background = 'var(--color-danger-soft)';
-        reasonBox.style.borderColor = 'var(--color-danger)';
-        reasonTitle.style.color = 'var(--color-danger)';
-        reasonIcon.textContent = '×';
-    }
-}
-
-// --- CANDIDATE LIST & ADVANCED SEARCH LOGIC ---
-
-const candidateListPane = document.getElementById('candidateListPane');
-const formPane = document.getElementById('formPane');
-const candidateGrid = document.getElementById('candidateGrid');
-const tabListBtn = document.getElementById('tabListBtn');
-const tabDetailBtn = document.getElementById('tabDetailBtn');
-const searchKeyword = document.getElementById('searchKeyword');
-const searchRole = document.getElementById('searchRole');
-const searchSkills = document.getElementById('searchSkills');
-const searchExp = document.getElementById('searchExp');
-const searchLocation = document.getElementById('searchLocation');
-const searchDegree = document.getElementById('searchDegree');
-
-function showCandidateList() {
-    if (candidateListPane) candidateListPane.classList.remove('hidden');
-    if (formPane) formPane.classList.add('hidden');
-    if (tabListBtn) tabListBtn.classList.add('active');
-    if (tabDetailBtn) tabDetailBtn.classList.remove('active');
-}
-
-function showCandidateDetail() {
-    if (candidateListPane) candidateListPane.classList.add('hidden');
-    if (formPane) formPane.classList.remove('hidden');
-    if (tabListBtn) tabListBtn.classList.remove('active');
-    if (tabDetailBtn) tabDetailBtn.classList.add('active');
-}
-
-if (tabListBtn) tabListBtn.addEventListener('click', showCandidateList);
-if (tabDetailBtn) tabDetailBtn.addEventListener('click', showCandidateDetail);
-
-function formatExperience(months) {
-    if (!months || months <= 0) return '0 tháng';
-    const y = Math.floor(months / 12);
-    const m = months % 12;
-    if (y > 0 && m > 0) return `${y} năm ${m} tháng`;
-    if (y > 0) return `${y} năm`;
-    return `${m} tháng`;
-}
-
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function evaluateBooleanQuery(query, text) {
-    if (!query.trim()) return { isMatch: true };
-    
-    const phrases = [];
-    let processedQuery = query.replace(/"([^"]+)"/g, (match, phrase) => {
-        phrases.push(phrase.toLowerCase());
-        return ` __PHRASE_${phrases.length - 1}__ `;
+// Xử lý modal mở rộng JD
+if (toggleJdExpand && jdModal && modalJdInput) {
+    toggleJdExpand.addEventListener('click', () => {
+        modalJdInput.value = jdInput.value;
+        jdModal.classList.remove('hidden');
     });
 
-    processedQuery = processedQuery
-        .replace(/\bAND\b/ig, '&&')
-        .replace(/\bOR\b/ig, '||');
+    closeJdModal?.addEventListener('click', () => jdModal.classList.add('hidden'));
+    saveJdModal?.addEventListener('click', () => {
+        jdInput.value = modalJdInput.value;
+        jdModal.classList.add('hidden');
+        showToast('Đã cập nhật nội dung JD.', 'info');
+    });
+}
 
-    const textLower = text.toLowerCase();
+// Chấm điểm độ phù hợp giữa hồ sơ ứng viên và JD
+if (matchBtn) {
+    matchBtn.addEventListener('click', async () => {
+        const jd = jdInput ? jdInput.value.trim() : '';
+        if (!jd) {
+            showToast('Vui lòng nhập hoặc chọn mẫu JD cần chấm điểm!', 'warning');
+            return;
+        }
 
-    processedQuery = processedQuery.replace(/([^\s\(\)\|&]+)/g, (match) => {
-        if (match === '&&' || match === '||') return match;
-        if (match.startsWith('__PHRASE_')) {
-            const idx = parseInt(match.replace('__PHRASE_', '').replace('__', ''));
-            const phrase = phrases[idx];
-            return textLower.includes(phrase) ? 'true' : 'false';
+        // Lấy dữ liệu hồ sơ mới nhất từ form
+        const candidateData = collectFormData();
+        if (!candidateData.candidate.fullName && !currentCandidateRecord) {
+            showToast('Vui lòng bóc tách hoặc nhập thông tin ứng viên trước khi chấm điểm!', 'warning');
+            return;
+        }
+
+        matchBtn.disabled = true;
+        matchBtn.innerHTML = '<span>Đang chấm điểm AI...</span>';
+
+        try {
+            const response = await fetch('/api/match-jd', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    candidateRecord: candidateData,
+                    jobDescription: jd
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            renderMatchResult(data);
+            showToast('Chấm điểm độ phù hợp thành công!', 'success');
+
+        } catch (error) {
+            showToast(`Lỗi chấm điểm: ${error.message}`, 'danger');
+        } finally {
+            matchBtn.disabled = false;
+            matchBtn.innerHTML = '<span>✦ Chấm điểm độ phù hợp</span>';
+        }
+    });
+}
+
+// Hiển thị kết quả chấm điểm JD
+function renderMatchResult(data) {
+    if (!matchResult) return;
+    matchResult.classList.remove('hidden');
+
+    const score = Number(data.score) || 0;
+    const rec = data.recommendation || 'CÂN NHẮC';
+    const reason = data.reason || 'Không có nhận xét chi tiết.';
+
+    // Cập nhật vòng quay điểm số
+    if (scorePath) {
+        scorePath.setAttribute('stroke-dasharray', `${score}, 100`);
+        let strokeColor = 'var(--gold)';
+        if (score >= 75) strokeColor = 'var(--brand)';
+        else if (score < 50) strokeColor = 'var(--gap)';
+        scorePath.style.color = strokeColor;
+    }
+
+    if (scoreText) scoreText.textContent = `${score}%`;
+
+    // Cập nhật nhãn khuyến nghị
+    if (recommendationBadge) {
+        recommendationBadge.textContent = rec;
+        recommendationBadge.className = 'conf-badge';
+        if (rec.toUpperCase().includes('NÊN') || rec.toUpperCase().includes('PHỎNG VẤN') || score >= 75) {
+            recommendationBadge.classList.add('conf-high');
+        } else if (rec.toUpperCase().includes('TỪ CHỐI') || score < 50) {
+            recommendationBadge.classList.add('conf-low');
         } else {
-            const word = match.toLowerCase();
-            return textLower.includes(word) ? 'true' : 'false';
+            recommendationBadge.classList.add('conf-med');
         }
-    });
-
-    try {
-        const isMatch = new Function(`return !!(${processedQuery});`)();
-        return { isMatch };
-    } catch (e) {
-        // Fallback for syntax error
-        const words = query.toLowerCase().replace(/[\(\)"]/g, ' ').split(/\s+/).filter(w => w !== 'and' && w !== 'or' && w);
-        const matched = words.filter(w => textLower.includes(w));
-        return { isMatch: matched.length > 0 };
     }
+
+    // Nhận xét chi tiết
+    if (reasonText) reasonText.textContent = reason;
 }
-
-function getHighlightedSnippet(text, keywords) {
-    if (!text) return '';
-    if (!keywords || keywords.length === 0) {
-        return text.length > 200 ? text.substring(0, 200) + '...' : text;
-    }
-    
-    let snippet = text;
-    let firstIdx = -1;
-    let sortedKw = [...keywords].sort((a,b) => b.length - a.length);
-
-    for (const kw of sortedKw) {
-        const idx = text.toLowerCase().indexOf(kw);
-        if (idx !== -1 && (firstIdx === -1 || idx < firstIdx)) {
-            firstIdx = idx;
-        }
-    }
-
-    if (firstIdx !== -1) {
-        const start = Math.max(0, firstIdx - 60);
-        const end = Math.min(text.length, firstIdx + 200);
-        snippet = (start > 0 ? '...' : '') + text.substring(start, end) + (end < text.length ? '...' : '');
-    } else {
-        snippet = text.length > 200 ? text.substring(0, 200) + '...' : text;
-    }
-
-    sortedKw.forEach(kw => {
-        if(kw.length < 2) return;
-        const regex = new RegExp(`(${escapeRegExp(kw)})`, 'gi');
-        snippet = snippet.replace(regex, '<mark class="highlight-match">$1</mark>');
-    });
-
-    return snippet;
-}
-
-function renderCandidateGrid(candidates, highlightKeywords = []) {
-    if (!candidateGrid) return;
-    candidateGrid.innerHTML = '';
-    
-    if (candidates.length === 0) {
-        candidateGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--color-ink-3); padding: var(--space-xl);">Không tìm thấy ứng viên phù hợp.</div>';
-        return;
-    }
-
-    candidates.forEach((record, index) => {
-        const cand = record.candidate || {};
-        const card = document.createElement('div');
-        card.className = 'card-yody candidate-card';
-        card.style.cursor = 'pointer';
-        card.style.transition = 'transform var(--dur-fast), box-shadow var(--dur-fast)';
-        
-        card.addEventListener('mouseenter', () => {
-            card.style.transform = 'translateY(-4px)';
-            card.style.boxShadow = 'var(--shadow-md)';
-        });
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = 'none';
-            card.style.boxShadow = 'var(--shadow-sm)';
-        });
-
-        card.addEventListener('click', () => {
-            currentCandidateRecord = record;
-            fillForm(record);
-            showCandidateDetail();
-        });
-
-        const expStr = formatExperience(cand.totalExperienceMonths);
-        const skillsHtml = (cand.skills || []).slice(0, 7).map(s => `<span class="tag-yody" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">${escapeHtml(s)}</span>`).join('');
-        
-        let bestText = cand.professionalSummary || '';
-        let snippetHtml = getHighlightedSnippet(bestText, highlightKeywords);
-        
-        if (highlightKeywords.length > 0 && !highlightKeywords.some(kw => bestText.toLowerCase().includes(kw))) {
-            const expWithMatch = (record.workExperience || []).find(w => 
-                highlightKeywords.some(kw => (w.description||'').toLowerCase().includes(kw) || (w.title||'').toLowerCase().includes(kw))
-            );
-            if (expWithMatch) {
-                bestText = `${expWithMatch.title} tại ${expWithMatch.company}: ${expWithMatch.description}`;
-                snippetHtml = getHighlightedSnippet(bestText, highlightKeywords);
-            }
-        }
-
-        card.innerHTML = `
-            <div style="display: flex; gap: var(--space-md);">
-                <div class="avatar-yody" style="width: 50px; height: 50px; font-size: 1.2rem; flex-shrink: 0;">${getInitials(cand.fullName)}</div>
-                <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.2rem;">
-                        <div class="font-display" style="font-weight: 800; font-size: 1.2rem; color: var(--color-ink);">${escapeHtml(cand.fullName || 'Chưa rõ tên')}</div>
-                        <div style="font-size: 0.85rem; color: var(--color-ink-2); display: flex; align-items: center; gap: 0.3rem;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                            ${escapeHtml(cand.location || 'Chưa rõ')}
-                        </div>
-                    </div>
-                    <div style="font-size: 0.95rem; font-weight: 600; color: var(--color-ink-2); margin-bottom: 0.5rem;">
-                        ${escapeHtml(cand.currentTitle || 'Chưa có chức danh')} • ${expStr}
-                    </div>
-                    <div class="pill-wrap" style="gap: 0.4rem; margin-bottom: 0.8rem;">
-                        ${skillsHtml}
-                    </div>
-                    <div style="font-size: 0.85rem; color: var(--color-ink-2); line-height: 1.5; background: var(--color-surface-2); padding: 0.6rem; border-radius: 6px; border-left: 3px solid var(--color-rule);">
-                        ${snippetHtml || '<span style="font-style: italic;">Chưa có tóm tắt</span>'}
-                    </div>
-                </div>
-            </div>
-        `;
-        candidateGrid.appendChild(card);
-    });
-}
-
-function filterCandidates() {
-    const rawQuery = (searchKeyword.value || '');
-    const role = (searchRole ? searchRole.value : '').toLowerCase();
-    const sk = (searchSkills ? searchSkills.value : '').toLowerCase();
-    const exp = parseInt(searchExp ? searchExp.value : '0', 10);
-    const loc = (searchLocation ? searchLocation.value : '').toLowerCase();
-    const deg = (searchDegree ? searchDegree.value : '').toLowerCase();
-
-    const allSearchTokens = rawQuery.toLowerCase().replace(/[\(\)"]/g, ' ').split(/\s+/).filter(w => w !== 'and' && w !== 'or' && w);
-    const phrases = [];
-    rawQuery.replace(/"([^"]+)"/g, (match, phrase) => {
-        phrases.push(phrase.toLowerCase());
-    });
-    const allKeywordsToHighlight = [...phrases, ...allSearchTokens];
-
-    const filtered = candidatePool.filter(record => {
-        const cand = record.candidate || {};
-        
-        // 1. Boolean Search Match
-        let fullText = `${cand.fullName || ''} ${cand.currentTitle || ''} ${cand.professionalSummary || ''} ${(cand.skills||[]).join(' ')} `;
-        (record.workExperience || []).forEach(w => { fullText += `${w.title || ''} ${w.description || ''} `; });
-        const boolResult = evaluateBooleanQuery(rawQuery, fullText);
-        const keywordMatch = boolResult.isMatch;
-
-        // 2. Role match
-        const roleMatch = role === '' || (cand.currentTitle || '').toLowerCase().includes(role);
-
-        // 3. Skills match
-        const candSkills = (cand.skills || []).map(s => s.toLowerCase());
-        const skillsMatch = sk === '' || candSkills.some(cs => cs.includes(sk));
-
-        // 4. Experience match
-        const candExp = cand.totalExperienceMonths || 0;
-        const expMatch = candExp >= exp;
-
-        // 5. Location match
-        const candLoc = (cand.location || '').toLowerCase();
-        let locMatch = true;
-        if (loc !== '') {
-            if (loc === 'khác') {
-                locMatch = !['hà nội', 'hồ chí minh', 'đà nẵng'].some(city => candLoc.includes(city));
-            } else {
-                locMatch = candLoc.includes(loc);
-            }
-        }
-
-        // 6. Degree match
-        let degreeMatch = true;
-        if (deg !== '') {
-            const edus = record.education || [];
-            const candDegrees = edus.map(e => (e.degree || '').toLowerCase());
-            if (deg === 'cử nhân') {
-                degreeMatch = candDegrees.some(d => d.includes('cử nhân') || d.includes('đại học'));
-            } else if (deg === 'cao đẳng') {
-                degreeMatch = candDegrees.some(d => d.includes('cao đẳng'));
-            }
-        }
-
-        return keywordMatch && roleMatch && skillsMatch && expMatch && locMatch && degreeMatch;
-    });
-
-    renderCandidateGrid(filtered, allKeywordsToHighlight);
-}
-
-if (searchKeyword) searchKeyword.addEventListener('input', filterCandidates);
-if (searchRole) searchRole.addEventListener('change', filterCandidates);
-if (searchSkills) searchSkills.addEventListener('change', filterCandidates);
-if (searchExp) searchExp.addEventListener('change', filterCandidates);
-if (searchLocation) searchLocation.addEventListener('change', filterCandidates);
-if (searchDegree) searchDegree.addEventListener('change', filterCandidates);
-
-// Initialize grid on load
-document.addEventListener('DOMContentLoaded', () => {
-    renderCandidateGrid(candidatePool);
-});
