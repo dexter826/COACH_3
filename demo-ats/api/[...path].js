@@ -1,31 +1,40 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
-const pdfModule = require('pdf-parse');
-const isLegacy = typeof pdfModule === 'function';
-const PDFParseClass = pdfModule.PDFParse || pdfModule.default;
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
-const path = require('path');
+app.use(express.json({ limit: '30mb' }));
+app.use(express.urlencoded({ extended: true, limit: '30mb' }));
+
 if (process.env.NODE_ENV !== 'production') {
     app.use(express.static(path.join(__dirname, '..')));
 }
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 // Gọi Google Gemini 3.6 Flash trực tiếp
-async function callGeminiApi(systemInstruction, userPrompt) {
+async function callGeminiApi(systemInstruction, userContent) {
     const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) {
-        throw new Error("Thiếu cấu hình GEMINI_API_KEY trong file .env");
+        throw new Error("Thiếu cấu hình GEMINI_API_KEY trong biến môi trường (Environment Variables).");
     }
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiKey}`;
+    
+    let parts = [];
+    if (typeof userContent === 'string') {
+        parts = [{ text: userContent }];
+    } else if (Array.isArray(userContent)) {
+        parts = userContent;
+    } else {
+        parts = [{ text: String(userContent) }];
+    }
+
     const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,14 +45,13 @@ async function callGeminiApi(systemInstruction, userPrompt) {
             contents: [
                 {
                     role: "user",
-                    parts: [{ text: userPrompt }]
+                    parts: parts
                 }
             ],
             generationConfig: {
                 responseMimeType: "application/json",
-                temperature: 0.1,
                 thinkingConfig: {
-                    thinkingBudget: 1
+                    thinkingLevel: "minimal"
                 }
             }
         })
@@ -66,35 +74,19 @@ async function callGeminiApi(systemInstruction, userPrompt) {
 app.post('/api/parse-cv', upload.single('cvFile'), async (req, res) => {
     const tServerStart = Date.now();
     try {
-        const file = req.file;
-        if (!file) {
-            return res.status(400).json({ error: "Không tìm thấy file tải lên." });
+        let pdfBase64 = null;
+
+        // 1. Nhận từ JSON Base64 payload (Chuẩn Serverless Vercel)
+        if (req.body && req.body.pdfBase64) {
+            pdfBase64 = req.body.pdfBase64.replace(/^data:application\/pdf;base64,/, '');
+        } 
+        // 2. Nhận từ Multer Form-data (Fallback)
+        else if (req.file && req.file.buffer) {
+            pdfBase64 = req.file.buffer.toString('base64');
         }
 
-        if (file.mimetype !== 'application/pdf') {
-            return res.status(400).json({ error: "Chỉ hỗ trợ file định dạng PDF." });
-        }
-
-        // Parse PDF to Text
-        const tPdfStart = Date.now();
-        let pdfText = "";
-        try {
-            if (isLegacy) {
-                const data = await pdfModule(file.buffer);
-                pdfText = data.text;
-            } else {
-                const parser = new PDFParseClass({ data: file.buffer });
-                const data = await parser.getText();
-                pdfText = data.text;
-            }
-        } catch (err) {
-            console.error("Lỗi gốc từ pdf-parse:", err);
-            return res.status(400).json({ error: "Lỗi đọc PDF: " + err.message });
-        }
-        const pdfParseMs = Date.now() - tPdfStart;
-
-        if (!pdfText || pdfText.trim().length === 0) {
-            return res.status(400).json({ error: "File PDF rỗng hoặc là ảnh scan không chứa chữ." });
+        if (!pdfBase64 || pdfBase64.trim().length === 0) {
+            return res.status(400).json({ error: "Không tìm thấy dữ liệu file PDF tải lên." });
         }
 
         const SYSTEM_INSTRUCTION = `Bạn là chuyên gia nhân sự ảo của YODY (YODY ATS).
@@ -135,8 +127,20 @@ Cấu trúc Output Schema Mở Rộng:
   "missingFields": ["list các trường quan trọng bị thiếu (fullName, email, phone)"]
 }`;
 
+        const userParts = [
+            {
+                inlineData: {
+                    mimeType: "application/pdf",
+                    data: pdfBase64
+                }
+            },
+            {
+                text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn."
+            }
+        ];
+
         const tAiStart = Date.now();
-        const candidateRecord = await callGeminiApi(SYSTEM_INSTRUCTION, `Hãy trích xuất JSON từ nội dung CV sau:\n\n${pdfText}`);
+        const candidateRecord = await callGeminiApi(SYSTEM_INSTRUCTION, userParts);
         const aiInferenceMs = Date.now() - tAiStart;
         const totalServerMs = Date.now() - tServerStart;
 
@@ -152,7 +156,6 @@ Cấu trúc Output Schema Mở Rộng:
         }
 
         candidateRecord._timings = {
-            pdfParseMs,
             aiInferenceMs,
             totalServerMs
         };

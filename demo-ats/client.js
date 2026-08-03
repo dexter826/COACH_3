@@ -901,8 +901,6 @@ if (extractBtn) {
         }
 
         const file = cvFileInput.files[0];
-        const formData = new FormData();
-        formData.append('cvFile', file);
 
         // Hiển thị trạng thái đang xử lý
         loadingOverlay.classList.remove('hidden');
@@ -916,9 +914,21 @@ if (extractBtn) {
         }, 100);
 
         try {
+            // Đọc file sang Base64 để tương thích 100% với Vercel Serverless Functions
+            const base64Data = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error("Lỗi khi đọc file trên trình duyệt."));
+                reader.readAsDataURL(file);
+            });
+
             const response = await fetch('/api/parse-cv', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pdfBase64: base64Data,
+                    fileName: file.name
+                })
             });
 
             clearInterval(timerInterval);
@@ -926,7 +936,7 @@ if (extractBtn) {
 
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || `HTTP ${response.status}`);
+                throw new Error(errData.error || `Lỗi máy chủ (${response.status})`);
             }
 
             const candidateRecord = await response.json();
