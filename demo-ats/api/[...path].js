@@ -18,13 +18,54 @@ if (process.env.NODE_ENV !== 'production') {
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-app.post('/api/parse-cv', upload.single('cvFile'), async (req, res) => {
-    try {
-        const apiKey = process.env.OPENROUTER_API_KEY;
-        if (!apiKey || apiKey === "dán_api_key_của_bạn_vào_đây") {
-            return res.status(500).json({ error: "Thiếu cấu hình OPENROUTER_API_KEY trên Server" });
-        }
+// Gọi Google Gemini 3.6 Flash trực tiếp
+async function callGeminiApi(systemInstruction, userPrompt) {
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (!geminiKey) {
+        throw new Error("Thiếu cấu hình GEMINI_API_KEY trong file .env");
+    }
 
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiKey}`;
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            systemInstruction: {
+                parts: [{ text: systemInstruction }]
+            },
+            contents: [
+                {
+                    role: "user",
+                    parts: [{ text: userPrompt }]
+                }
+            ],
+            generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.1,
+                thinkingConfig: {
+                    thinkingBudget: 1
+                }
+            }
+        })
+    });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Lỗi Google Gemini API (${response.status}): ${errText}`);
+    }
+
+    const data = await response.json();
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!rawText) {
+        throw new Error("Gemini không trả về dữ liệu.");
+    }
+
+    return JSON.parse(rawText);
+}
+
+app.post('/api/parse-cv', upload.single('cvFile'), async (req, res) => {
+    const tServerStart = Date.now();
+    try {
         const file = req.file;
         if (!file) {
             return res.status(400).json({ error: "Không tìm thấy file tải lên." });
@@ -35,6 +76,7 @@ app.post('/api/parse-cv', upload.single('cvFile'), async (req, res) => {
         }
 
         // Parse PDF to Text
+        const tPdfStart = Date.now();
         let pdfText = "";
         try {
             if (isLegacy) {
@@ -49,14 +91,20 @@ app.post('/api/parse-cv', upload.single('cvFile'), async (req, res) => {
             console.error("Lỗi gốc từ pdf-parse:", err);
             return res.status(400).json({ error: "Lỗi đọc PDF: " + err.message });
         }
+        const pdfParseMs = Date.now() - tPdfStart;
 
         if (!pdfText || pdfText.trim().length === 0) {
             return res.status(400).json({ error: "File PDF rỗng hoặc là ảnh scan không chứa chữ." });
         }
 
         const SYSTEM_INSTRUCTION = `Bạn là chuyên gia nhân sự ảo của YODY (YODY ATS).
-Nhiệm vụ của bạn là trích xuất thông tin từ văn bản CV của ứng viên (nhập dưới dạng Text) vào một cấu trúc JSON chuẩn.
-BẠN PHẢI TRẢ VỀ DUY NHẤT MỘT CHUỖI JSON HỢP LỆ (Không Markdown, không giải thích).
+Nhiệm vụ: Trích xuất thông tin từ văn bản CV của ứng viên vào cấu trúc JSON chuẩn.
+BẠN PHẢI TRẢ VỀ DUY NHẤT MỘT CHUỖI JSON HỢP LỆ.
+
+Quy tắc tối ưu tốc độ & súc tích:
+- "description" trong workExperience và projects: Tóm tắt 1-2 gạch đầu dòng ngắn gọn về trách nhiệm/kết quả chính, không sao chép lại cả đoạn văn dài.
+- "professionalSummary": Tóm tắt tối đa 2 câu súc tích.
+- Bỏ qua mục không có thông tin (để chuỗi rỗng "" hoặc mảng rỗng []).
 
 Cấu trúc Output Schema:
 {
@@ -66,7 +114,7 @@ Cấu trúc Output Schema:
     "phone": "Số điện thoại",
     "location": "Địa chỉ",
     "currentTitle": "Chức danh",
-    "professionalSummary": "Tóm tắt",
+    "professionalSummary": "Tóm tắt ngắn gọn",
     "totalExperienceMonths": <tổng số tháng kinh nghiệm làm việc>,
     "skills": ["kỹ năng 1"],
     "languages": ["ngoại ngữ 1"],
@@ -79,39 +127,17 @@ Cấu trúc Output Schema:
   "missingFields": ["list các trường quan trọng bị thiếu (fullName, email, phone)"]
 }`;
 
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'HTTP-Referer': 'http://localhost:3000', 
-                'X-Title': 'YODY ATS Demo',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: "openai/gpt-oss-20b:free",
-                messages: [
-                    { role: "system", content: SYSTEM_INSTRUCTION },
-                    { role: "user", content: `Hãy trích xuất JSON từ nội dung CV sau:\n\n${pdfText}` }
-                ],
-                temperature: 0.1
-            })
-        });
+        const tAiStart = Date.now();
+        const candidateRecord = await callGeminiApi(SYSTEM_INSTRUCTION, `Hãy trích xuất JSON từ nội dung CV sau:\n\n${pdfText}`);
+        const aiInferenceMs = Date.now() - tAiStart;
+        const totalServerMs = Date.now() - tServerStart;
 
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error("Lỗi API OpenRouter: " + errText);
-        }
+        candidateRecord._timings = {
+            pdfParseMs,
+            aiInferenceMs,
+            totalServerMs
+        };
 
-        const data = await response.json();
-        let jsonString = data.choices[0].message.content;
-        
-        const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            throw new Error("AI không trả về định dạng JSON hợp lệ.");
-        }
-        jsonString = jsonMatch[0];
-
-        const candidateRecord = JSON.parse(jsonString);
         res.json(candidateRecord);
 
     } catch (error) {
@@ -121,19 +147,15 @@ Cấu trúc Output Schema:
 });
 
 app.post('/api/match-jd', async (req, res) => {
+    const tServerStart = Date.now();
     try {
-        const apiKey = process.env.OPENROUTER_API_KEY;
-        if (!apiKey || apiKey === "dán_api_key_của_bạn_vào_đây") {
-            return res.status(500).json({ error: "Thiếu cấu hình OPENROUTER_API_KEY trên Server" });
-        }
-
         const { candidateRecord, jobDescription } = req.body;
         if (!candidateRecord || !jobDescription) {
             return res.status(400).json({ error: "Thiếu dữ liệu candidateRecord hoặc jobDescription" });
         }
 
         const MATCHER_INSTRUCTION = `Bạn là hệ thống AI phân tích và sàng lọc ứng viên thông minh của YODY ATS.
-Nhiệm vụ: Nhận vào JSON ứng viên và JD (text), so sánh linh hoạt (semantic match) và trả về JSON (Không giải thích, Không bọc code block):
+Nhiệm vụ: Nhận vào JSON ứng viên và JD (text), so sánh linh hoạt (semantic match) và trả về JSON:
 {
   "score": <number 0-100>,
   "recommendation": "<NÊN PHỎNG VẤN / CÂN NHẮC / TỪ CHỐI>",
@@ -142,39 +164,16 @@ Nhiệm vụ: Nhận vào JSON ứng viên và JD (text), so sánh linh hoạt (
 
         const promptText = `Hồ sơ ứng viên (JSON):\n${JSON.stringify(candidateRecord)}\n\nYêu cầu công việc (JD):\n${jobDescription}\n\nHãy phân tích mức độ phù hợp và trả về JSON theo đúng schema yêu cầu.`;
 
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'HTTP-Referer': 'http://localhost:3000', 
-                'X-Title': 'YODY ATS Demo',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: "openai/gpt-oss-20b:free",
-                messages: [
-                    { role: "system", content: MATCHER_INSTRUCTION },
-                    { role: "user", content: promptText }
-                ],
-                temperature: 0.1
-            })
-        });
+        const tAiStart = Date.now();
+        const matchResult = await callGeminiApi(MATCHER_INSTRUCTION, promptText);
+        const aiInferenceMs = Date.now() - tAiStart;
+        const totalServerMs = Date.now() - tServerStart;
 
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error("Lỗi API OpenRouter: " + errText);
-        }
+        matchResult._timings = {
+            aiInferenceMs,
+            totalServerMs
+        };
 
-        const data = await response.json();
-        let jsonString = data.choices[0].message.content;
-        
-        const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            throw new Error("AI không trả về định dạng JSON hợp lệ.");
-        }
-        jsonString = jsonMatch[0];
-
-        const matchResult = JSON.parse(jsonString);
         res.json(matchResult);
 
     } catch (error) {

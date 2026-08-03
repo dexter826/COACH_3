@@ -117,6 +117,8 @@ extractBtn.addEventListener('click', async () => {
         return;
     }
 
+    const tClientStart = Date.now();
+    showCandidateDetail();
     setLoading(true);
 
     try {
@@ -129,11 +131,14 @@ extractBtn.addEventListener('click', async () => {
         });
 
         const candidateRecord = await readJsonResponse(response, 'Không thể trích xuất CV.');
+        const totalClientMs = Date.now() - tClientStart;
+
         currentCandidateRecord = candidateRecord;
         candidatePool.unshift(candidateRecord);
         fillForm(candidateRecord);
-        showCandidateDetail();
         renderCandidateGrid(candidatePool);
+
+        displayTimings(candidateRecord._timings, totalClientMs);
     } catch (error) {
         alert('Đã xảy ra lỗi: ' + error.message);
     } finally {
@@ -141,20 +146,66 @@ extractBtn.addEventListener('click', async () => {
     }
 });
 
+// Hiển thị thống kê thời gian thực hiện từng bước
+function displayTimings(timings, totalClientMs) {
+    const banner = document.getElementById('timingBanner');
+    if (!banner) return;
+
+    const pdfMs = timings?.pdfParseMs || 0;
+    const aiMs = timings?.aiInferenceMs || 0;
+    const serverMs = timings?.totalServerMs || (pdfMs + aiMs);
+    const clientNetworkMs = Math.max(0, totalClientMs - serverMs);
+
+    const totalEl = document.getElementById('timeTotalVal');
+    const pdfEl = document.getElementById('timePdfVal');
+    const aiEl = document.getElementById('timeAiVal');
+    const clientEl = document.getElementById('timeClientVal');
+
+    if (totalEl) totalEl.textContent = `${(totalClientMs / 1000).toFixed(2)}s`;
+    if (pdfEl) pdfEl.textContent = `${pdfMs}ms`;
+    if (aiEl) aiEl.textContent = `${(aiMs / 1000).toFixed(2)}s`;
+    if (clientEl) clientEl.textContent = `${(clientNetworkMs / 1000).toFixed(2)}s`;
+    banner.classList.remove('hidden');
+}
+
+let parseLoadingTimer = null;
+
+// Cập nhật trạng thái loading kèm đồng hồ bấm giờ
 function setLoading(isLoading) {
     const formPane = document.getElementById('formPane');
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingTimeEl = document.getElementById('loadingTime');
+    const btnTextEl = document.getElementById('btnText');
     extractBtn.disabled = isLoading;
-    document.getElementById('btnText').textContent = isLoading ? 'Đang xử lý...' : 'Trích xuất CV';
 
     if (isLoading) {
-        formPane.scrollTop = 0;
-        formPane.style.pointerEvents = 'none';
-        loadingOverlay.classList.remove('hidden');
-        loadingOverlay.classList.add('flex');
+        if (formPane) {
+            formPane.scrollTop = 0;
+            formPane.style.pointerEvents = 'none';
+        }
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
+
+        const startTime = Date.now();
+        if (loadingTimeEl) loadingTimeEl.textContent = 'Đang xử lý: 0.0s';
+        if (btnTextEl) btnTextEl.textContent = 'Đang xử lý... (0.0s)';
+
+        clearInterval(parseLoadingTimer);
+        parseLoadingTimer = setInterval(() => {
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            if (loadingTimeEl) loadingTimeEl.textContent = `Đang xử lý: ${elapsed}s`;
+            if (btnTextEl) btnTextEl.textContent = `Đang xử lý... (${elapsed}s)`;
+        }, 100);
     } else {
-        formPane.style.pointerEvents = '';
-        loadingOverlay.classList.add('hidden');
-        loadingOverlay.classList.remove('flex');
+        clearInterval(parseLoadingTimer);
+        if (formPane) formPane.style.pointerEvents = '';
+        if (overlay) {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
+        if (btnTextEl) btnTextEl.textContent = 'Trích xuất CV';
     }
 }
 
@@ -377,7 +428,13 @@ document.getElementById('matchBtn').addEventListener('click', async () => {
 
     const button = document.getElementById('matchBtn');
     button.disabled = true;
-    button.innerHTML = '<span>Đang phân tích...</span>';
+    const startMatchTime = Date.now();
+    button.innerHTML = '<span>Đang phân tích... (0.0s)</span>';
+
+    const matchTimer = setInterval(() => {
+        const elapsed = ((Date.now() - startMatchTime) / 1000).toFixed(1);
+        button.innerHTML = `<span>Đang phân tích... (${elapsed}s)</span>`;
+    }, 100);
 
     try {
         const response = await fetch(apiUrl('/api/match-jd'), {
@@ -394,6 +451,7 @@ document.getElementById('matchBtn').addEventListener('click', async () => {
     } catch (error) {
         alert('Đã xảy ra lỗi: ' + error.message);
     } finally {
+        clearInterval(matchTimer);
         button.disabled = false;
         button.innerHTML = '<span>Chấm điểm độ phù hợp</span>';
     }
