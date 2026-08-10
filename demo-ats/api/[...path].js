@@ -127,17 +127,34 @@ Cấu trúc Output Schema Mở Rộng:
   "missingFields": ["list các trường quan trọng bị thiếu (fullName, email, phone)"]
 }`;
 
-        const userParts = [
-            {
-                inlineData: {
-                    mimeType: "application/pdf",
-                    data: pdfBase64
-                }
-            },
-            {
-                text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn."
+        let userParts = [];
+        let pdfParseMs = 0;
+        try {
+            const { processPdf } = await import('@firecrawl/pdf-inspector');
+            const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+            const tParseStart = Date.now();
+            const pdfResult = processPdf(pdfBuffer);
+            pdfParseMs = Date.now() - tParseStart;
+            console.log(`[PDF Inspector] Loại PDF: ${pdfResult.pdfType} - Thời gian parse: ${pdfParseMs}ms`);
+
+            if (pdfResult.pdfType === 'TextBased' || pdfResult.pdfType === 'Mixed') {
+                userParts = [
+                    { text: "Dưới đây là nội dung văn bản CV đã được trích xuất sạch sẽ dưới dạng Markdown:\n\n" + pdfResult.markdown },
+                    { text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn." }
+                ];
+            } else {
+                userParts = [
+                    { inlineData: { mimeType: "application/pdf", data: pdfBase64 } },
+                    { text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn." }
+                ];
             }
-        ];
+        } catch (parseError) {
+            console.error("Lỗi parse PDF với pdf-inspector, chuyển sang fallback:", parseError.message);
+            userParts = [
+                { inlineData: { mimeType: "application/pdf", data: pdfBase64 } },
+                { text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn." }
+            ];
+        }
 
         const tAiStart = Date.now();
         const candidateRecord = await callGeminiApi(SYSTEM_INSTRUCTION, userParts);
@@ -157,7 +174,8 @@ Cấu trúc Output Schema Mở Rộng:
 
         candidateRecord._timings = {
             aiInferenceMs,
-            totalServerMs
+            totalServerMs,
+            pdfParseMs
         };
 
         res.json(candidateRecord);
