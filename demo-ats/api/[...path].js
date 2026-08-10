@@ -105,11 +105,14 @@ Cấu trúc Output Schema Mở Rộng:
     "fullName": "Tên",
     "email": "Email",
     "phone": "Số điện thoại",
+    "yearOfBirth": "Năm sinh",
+    "gender": "Giới tính",
     "location": "Địa chỉ",
     "currentTitle": "Chức danh",
     "professionalSummary": "Tóm tắt ngắn gọn",
     "totalExperienceMonths": <tổng số tháng kinh nghiệm làm việc>,
-    "skills": ["kỹ năng 1"],
+    "technicalSkills": ["kỹ năng chuyên môn 1"],
+    "softSkills": ["kỹ năng mềm 1"],
     "languages": ["ngoại ngữ 1"],
     "socialLinks": [
       { "platform": "Tên nền tảng", "url": "Đường dẫn" }
@@ -135,7 +138,6 @@ Cấu trúc Output Schema Mở Rộng:
             const tParseStart = Date.now();
             const pdfResult = processPdf(pdfBuffer);
             pdfParseMs = Date.now() - tParseStart;
-            console.log(`[PDF Inspector] Loại PDF: ${pdfResult.pdfType} - Thời gian parse: ${pdfParseMs}ms`);
 
             if (pdfResult.pdfType === 'TextBased' || pdfResult.pdfType === 'Mixed') {
                 userParts = [

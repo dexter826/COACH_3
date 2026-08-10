@@ -51,7 +51,7 @@
                             </svg>
                         </div>
                         <span class="dropzone-title">Kéo thả file PDF CV</span>
-                        <span class="dropzone-desc" id="fileNameDisplay">hoặc bấm để chọn file (tối đa 10MB)</span>
+                        <span class="dropzone-desc" id="fileNameDisplay" style="display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 16px;">hoặc bấm để chọn file (tối đa 10MB)</span>
                         <input id="cvFile" name="cvFile" type="file" class="hidden" accept="application/pdf">
                     </label>
 
@@ -101,7 +101,17 @@
                             <span class="status-indicator-dot"></span>
                             <span id="formModeLabel">Hồ sơ Ứng viên (ATS Record)</span>
                         </div>
-                        <div class="form-actions-row">
+                        <div class="form-actions-row" style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" id="btnViewCv" class="btn-ghost btn-sm" disabled>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                <span>Xem CV gốc</span>
+                            </button>
                             <button type="button" id="btnResetForm" class="btn-ghost btn-sm">
                                 <span>Làm mới</span>
                             </button>
@@ -347,6 +357,24 @@
             </div>
             <div class="modal-foot">
                 <button type="button" id="saveJdModal" class="btn-brand">Áp dụng & Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xem CV Gốc -->
+    <div id="cvModal" class="modal-backdrop hidden">
+        <div class="modal-panel" style="width: 90vw; max-width: 1200px; height: 85vh;" role="dialog" aria-modal="true" aria-labelledby="cvModalTitle">
+            <div class="modal-head">
+                <h3 id="cvModalTitle" class="panel-title gold">Bản Gốc CV Ứng Viên</h3>
+                <button type="button" id="closeCvModal" class="btn-icon-only" aria-label="Đóng">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; flex: 1; overflow: hidden; background: #525659;">
+                <iframe id="cvPreviewFrame" style="flex: 1; width: 100%; height: 100%; border: none;" src=""></iframe>
             </div>
         </div>
     </div>

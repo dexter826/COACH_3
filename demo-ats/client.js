@@ -56,6 +56,13 @@ const formReferences = document.getElementById('form-references');
 const btnSaveCandidate = document.getElementById('btnSaveCandidate');
 const btnResetForm = document.getElementById('btnResetForm');
 
+// Các phần tử Xem CV gốc
+const btnViewCv = document.getElementById('btnViewCv');
+const cvModal = document.getElementById('cvModal');
+const closeCvModal = document.getElementById('closeCvModal');
+const cvPreviewFrame = document.getElementById('cvPreviewFrame');
+let currentCvBlobUrl = null;
+
 // Dữ liệu ứng viên đang mở trong form
 let currentCandidateRecord = null;
 
@@ -120,8 +127,18 @@ function fillForm(record) {
     if (formEmail) formEmail.value = c.email || '';
     if (formPhone) formPhone.value = c.phone || '';
     if (formLocation) formLocation.value = c.location || '';
-    if (formYob) formYob.value = c.yearOfBirth || '';
-    if (formGender) formGender.value = c.gender || '';
+    if (formYob) {
+        const yobStr = String(c.yearOfBirth || '');
+        const match = yobStr.match(/\b(19|20)\d{2}\b/);
+        formYob.value = match ? match[0] : '';
+    }
+    if (formGender) {
+        const gStr = String(c.gender || '').toLowerCase();
+        if (gStr.includes('nam') || gStr === 'male' || gStr === 'm') formGender.value = 'male';
+        else if (gStr.includes('nữ') || gStr === 'nu' || gStr === 'female' || gStr === 'f') formGender.value = 'female';
+        else if (gStr.includes('khác') || gStr === 'other') formGender.value = 'other';
+        else formGender.value = '';
+    }
     if (formSummary) formSummary.value = c.professionalSummary || '';
 
     // Kỹ năng & Ngoại ngữ
@@ -853,6 +870,19 @@ function collectFormData() {
     return record;
 }
 
+function handleFileSelection(file) {
+    if (!file) return;
+    fileNameDisplay.textContent = file.name;
+    showToast(`Đã chọn file: ${file.name}`, 'info');
+
+    // Cập nhật tính năng xem CV gốc
+    if (currentCvBlobUrl) {
+        URL.revokeObjectURL(currentCvBlobUrl);
+    }
+    currentCvBlobUrl = URL.createObjectURL(file);
+    if (btnViewCv) btnViewCv.disabled = false;
+}
+
 // Xử lý kéo thả file PDF CV
 if (dropzone) {
     ['dragenter', 'dragover'].forEach(eventName => {
@@ -876,8 +906,7 @@ if (dropzone) {
         const files = dt.files;
         if (files && files[0]) {
             cvFileInput.files = files;
-            fileNameDisplay.textContent = files[0].name;
-            showToast(`Đã chọn file: ${files[0].name}`, 'info');
+            handleFileSelection(files[0]);
         }
     });
 }
@@ -886,8 +915,7 @@ if (dropzone) {
 if (cvFileInput) {
     cvFileInput.addEventListener('change', () => {
         if (cvFileInput.files && cvFileInput.files[0]) {
-            fileNameDisplay.textContent = cvFileInput.files[0].name;
-            showToast(`Đã chọn file: ${cvFileInput.files[0].name}`, 'info');
+            handleFileSelection(cvFileInput.files[0]);
         }
     });
 }
@@ -1178,4 +1206,22 @@ function renderMatchResult(data) {
 
     // Nhận xét chi tiết
     if (reasonText) reasonText.textContent = reason;
+}
+
+// Tính năng Xem CV Gốc
+if (btnViewCv && cvModal && closeCvModal && cvPreviewFrame) {
+    btnViewCv.addEventListener('click', () => {
+        if (currentCvBlobUrl) {
+            cvPreviewFrame.src = currentCvBlobUrl;
+            cvModal.classList.remove('hidden');
+        } else {
+            showToast('Chưa có file CV nào được tải lên.', 'warning');
+        }
+    });
+
+    closeCvModal.addEventListener('click', () => {
+        cvModal.classList.add('hidden');
+        // Giải phóng iframe để tối ưu bộ nhớ khi đóng
+        cvPreviewFrame.src = ''; 
+    });
 }
