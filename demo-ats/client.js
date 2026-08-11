@@ -920,6 +920,82 @@ if (cvFileInput) {
     });
 }
 
+// Hàm phụ trợ quét nhiều QR Code trên 1 canvas
+function extractMultipleQRs(ctx, canvas) {
+    const foundCodes = [];
+    let attempts = 0;
+    // Giới hạn quét tối đa 5 QR codes để tránh lặp vô hạn
+    while (attempts < 5) {
+        attempts++;
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+            foundCodes.push(code.data);
+            console.log(`Đã tìm thấy QR Code thứ ${attempts}:`, code.data);
+            
+            // Vẽ đè một hình chữ nhật đen lên vị trí mã QR vừa tìm thấy để jsQR không quét lại nó
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.moveTo(code.location.topLeftCorner.x, code.location.topLeftCorner.y);
+            ctx.lineTo(code.location.topRightCorner.x, code.location.topRightCorner.y);
+            ctx.lineTo(code.location.bottomRightCorner.x, code.location.bottomRightCorner.y);
+            ctx.lineTo(code.location.bottomLeftCorner.x, code.location.bottomLeftCorner.y);
+            ctx.closePath();
+            ctx.fill();
+        } else {
+            break; 
+        }
+    }
+    return foundCodes.length > 0 ? foundCodes.join(' | ') : null;
+}
+
+// Quét mã QR từ file (PDF hoặc Image) bằng Canvas trên Frontend
+async function scanQRCodeFromFile(file) {
+    return new Promise(async (resolve) => {
+        try {
+            if (!file) return resolve(null);
+            
+            if (file.type === 'application/pdf') {
+                if (typeof pdfjsLib === 'undefined' || typeof jsQR === 'undefined') return resolve(null);
+                const fileURL = URL.createObjectURL(file);
+                const loadingTask = pdfjsLib.getDocument(fileURL);
+                const pdf = await loadingTask.promise;
+                const page = await pdf.getPage(1); 
+                
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                URL.revokeObjectURL(fileURL);
+                
+                resolve(extractMultipleQRs(ctx, canvas));
+            } 
+            else if (file.type.startsWith('image/')) {
+                if (typeof jsQR === 'undefined') return resolve(null);
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(extractMultipleQRs(ctx, canvas));
+                };
+                img.onerror = () => resolve(null);
+                img.src = URL.createObjectURL(file);
+            } else {
+                resolve(null);
+            }
+        } catch (error) {
+            console.warn("Lỗi khi quét QR Code trên trình duyệt:", error);
+            resolve(null);
+        }
+    });
+}
+
 // Bắt đầu bóc tách CV qua AI
 if (extractBtn) {
     extractBtn.addEventListener('click', async () => {
@@ -950,12 +1026,20 @@ if (extractBtn) {
                 reader.readAsDataURL(file);
             });
 
+            // Tiến hành quét mã QR ngầm (không chặn luồng chính nếu lỗi)
+            let qrData = null;
+            try {
+                if (loadingTime) loadingTime.textContent = 'Đang quét mã QR...';
+                qrData = await scanQRCodeFromFile(file);
+            } catch (e) {}
+
             const response = await fetch('/api/parse-cv', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     pdfBase64: base64Data,
-                    fileName: file.name
+                    fileName: file.name,
+                    qrData: qrData
                 })
             });
 

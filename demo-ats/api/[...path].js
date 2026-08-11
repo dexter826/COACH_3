@@ -85,6 +85,8 @@ app.post('/api/parse-cv', upload.single('cvFile'), async (req, res) => {
             pdfBase64 = req.file.buffer.toString('base64');
         }
 
+        const qrData = req.body && req.body.qrData ? req.body.qrData : null;
+
         if (!pdfBase64 || pdfBase64.trim().length === 0) {
             return res.status(400).json({ error: "Không tìm thấy dữ liệu file PDF tải lên." });
         }
@@ -132,6 +134,11 @@ Cấu trúc Output Schema Mở Rộng:
 
         let userParts = [];
         let pdfParseMs = 0;
+        
+        const qrPromptAppend = qrData 
+            ? `\n\n[HỆ THỐNG QUÉT QR MẶT TRƯỚC]: Hệ thống Frontend đã giải mã được một mã QR Code ẩn trên CV chứa nội dung/đường link sau: "${qrData}". Hãy phân tích nội dung này và chủ động ghép vào các trường tương ứng (ví dụ: mảng socialLinks, phone, portfolio...) nếu thấy hợp lý!` 
+            : '';
+
         try {
             const { processPdf } = await import('@firecrawl/pdf-inspector');
             const pdfBuffer = Buffer.from(pdfBase64, 'base64');
@@ -142,19 +149,19 @@ Cấu trúc Output Schema Mở Rộng:
             if (pdfResult.pdfType === 'TextBased' || pdfResult.pdfType === 'Mixed') {
                 userParts = [
                     { text: "Dưới đây là nội dung văn bản CV đã được trích xuất sạch sẽ dưới dạng Markdown:\n\n" + pdfResult.markdown },
-                    { text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn." }
+                    { text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn." + qrPromptAppend }
                 ];
             } else {
                 userParts = [
                     { inlineData: { mimeType: "application/pdf", data: pdfBase64 } },
-                    { text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn." }
+                    { text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn." + qrPromptAppend }
                 ];
             }
         } catch (parseError) {
             console.error("Lỗi parse PDF với pdf-inspector, chuyển sang fallback:", parseError.message);
             userParts = [
                 { inlineData: { mimeType: "application/pdf", data: pdfBase64 } },
-                { text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn." }
+                { text: "Hãy trích xuất toàn bộ thông tin từ tài liệu CV này vào cấu trúc JSON theo đúng schema đã hướng dẫn." + qrPromptAppend }
             ];
         }
 
