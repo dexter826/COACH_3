@@ -187,16 +187,7 @@ function renderSocialLinks(links) {
 
     const list = Array.isArray(links) && links.length > 0 ? links : [{ platform: '', url: '' }];
     list.forEach((item, index) => {
-        const row = document.createElement('div');
-        row.className = 'social-link-row';
-        row.style.cssText = 'display: flex; gap: var(--space-xs); margin-bottom: var(--space-xs); align-items: center;';
-        row.innerHTML = `
-            <input type="text" class="form-input font-mono social-platform" style="width: 140px;" placeholder="Nền tảng (VD: LinkedIn)" value="${escapeHtml(item.platform || '')}">
-            <input type="url" class="form-input font-mono social-url" style="flex: 1;" placeholder="Đường dẫn URL" value="${escapeHtml(item.url || '')}">
-            <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-social" title="Xóa">✕</button>
-        `;
-        row.querySelector('.btn-remove-social').addEventListener('click', () => row.remove());
-        formSocialLinks.appendChild(row);
+        addSocialLinkRow(item.platform, item.url);
     });
 }
 
@@ -207,11 +198,29 @@ function addSocialLinkRow(platform = '', url = '') {
     row.className = 'social-link-row';
     row.style.cssText = 'display: flex; gap: var(--space-xs); margin-bottom: var(--space-xs); align-items: center;';
     row.innerHTML = `
-        <input type="text" class="form-input font-mono social-platform" style="width: 140px;" placeholder="Nền tảng (VD: GitHub)" value="${escapeHtml(platform)}">
-        <input type="url" class="form-input font-mono social-url" style="flex: 1;" placeholder="Đường dẫn URL" value="${escapeHtml(url)}">
+        <input type="text" class="form-input font-mono social-platform" style="width: 140px;" placeholder="Nền tảng (VD: GitHub)" value="${escapeHtml(platform || '')}">
+        <input type="url" class="form-input font-mono social-url" style="flex: 1;" placeholder="Đường dẫn URL" value="${escapeHtml(url || '')}">
+        <button type="button" class="btn-ghost btn-sm btn-icon-only text-primary btn-open-social" title="Mở đường dẫn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+        </button>
         <button type="button" class="btn-ghost btn-sm btn-icon-only text-danger btn-remove-social" title="Xóa">✕</button>
     `;
+    
+    // Sự kiện mở link
+    row.querySelector('.btn-open-social').addEventListener('click', () => {
+        const currentUrl = row.querySelector('.social-url').value.trim();
+        if (currentUrl) {
+            window.open(currentUrl.startsWith('http') ? currentUrl : 'https://' + currentUrl, '_blank');
+        } else {
+            showToast('Chưa có đường dẫn URL để mở.', 'warning');
+        }
+    });
+    
+    // Sự kiện xóa
     row.querySelector('.btn-remove-social').addEventListener('click', () => row.remove());
+    
     formSocialLinks.appendChild(row);
 }
 
