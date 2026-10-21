@@ -1,0 +1,26 @@
+/* ─────────────────────────────────────────────────────────
+   YODY AI Kit · INDEX
+   ─────────────────────────────────────────────────────────
+   AI-vocabulary pattern library. Iris-glow halo + sparkle
+   glyph distinguish AI work from human work.
+
+   v2 (canonical) — preview/blocks/ai-vocabulary-v2.html.
+   "Restrained" is the default look; add class .dir-b on the
+   .ai2 root for the "Expressive" variant. Dark via .t-dark.
+   New classes: .ai-composer .ai-chip .ai-field .conf .ai-stream
+   .ai-suggest .ai-panel .ai-note .ai-tag .spark / .ai-mark.
+
+   Load AFTER colors_and_type + the Tailwind component layer:
+     <link rel="stylesheet" href="colors_and_type.css" />
+     <link rel="stylesheet" href="tailwind/yody.components.css (inline)" />
+     <link rel="stylesheet" href="ui_kits/yody-ai/index.css" />
+   ───────────────────────────────────────────────────────── */
+
+/* legacy v1 base — kept so screens not yet ported keep rendering */
+@import url('./vocabulary.css');
+
+/* canonical v2 (Restrained default + Expressive variant).
+   Loaded LAST so its compat layer upgrades the old class names
+   (.ai-card .ai-conf .ai-badge .ai-diff .ai-assist …) to the v2 look
+   with zero markup changes. */
+@import url('./vocabulary-v2.css');

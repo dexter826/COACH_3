@@ -1,0 +1,226 @@
+<!-- @dsCard group="Spacing" name="Motion" subtitle="Easing · duration tokens · enter/exit · component motion (shadcn naming)" viewport="960x1180" -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Motion · Tailwind v4 · YODY Design System</title>
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<style>
+  * { box-sizing: border-box; }
+  body { background: var(--bg-2); color: var(--fg-1); font-family: var(--font-body); margin: 0; padding: 40px; }
+  .wrap { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+  header { display: flex; flex-direction: column; gap: 10px; }
+  .eyebrow { font: 700 13px/1 var(--font-mono); letter-spacing: 0.32em; text-transform: uppercase; color: var(--brand); }
+  h1 { font: 800 38px/1 var(--font-impact, var(--font-body)); letter-spacing: -0.02em; margin: 0; }
+  .lede { font-size: 17px; line-height: 1.6; color: var(--fg-2); max-width: 640px; margin: 0; }
+
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); padding: 26px 28px; display: flex; flex-direction: column; gap: 20px; }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 14px; }
+  .card-head h2 { font: 700 18px/1.1 var(--font-body); margin: 0; letter-spacing: -0.01em; }
+  .card-head .hint { font: 600 11px/1 var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); }
+  .lbl { font: 600 11px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-3); }
+  .mono { font-family: var(--font-mono); }
+
+  /* token rows */
+  .tok { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--border-light); }
+  .tok:last-child { border-bottom: 0; }
+  .tok .name { font: 600 13px/1 var(--font-mono); color: var(--fg-1); }
+  .tok .val { font: 400 12px/1 var(--font-mono); color: var(--fg-3); }
+  .tok .use { font-size: 13px; color: var(--fg-2); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font: 500 12px/1 var(--font-mono); color: var(--fg-2); padding: 7px 12px; border-radius: var(--radius-pill, 999px); background: var(--bg-muted); }
+  .chip b { color: var(--fg-1); }
+
+  /* easing demo tracks */
+  .track { position: relative; height: 14px; border-radius: 999px; background: var(--bg-muted); margin: 6px 0; }
+  .track .dot { position: absolute; top: 50%; left: 4px; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: var(--brand); box-shadow: var(--shadow-sm); }
+  .track.run .dot { left: calc(100% - 26px); }
+  .track--out .dot { transition: left var(--dur-slow) var(--ease-out); }
+  .track--over .dot { transition: left var(--dur-slow) var(--ease-overshoot); background: var(--iris); }
+
+  /* enter/exit grid */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .demo { position: relative; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-2); min-height: 116px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
+  .demo .util { position: absolute; left: 10px; bottom: 9px; font: 500 11px/1.3 var(--font-mono); color: var(--fg-3); }
+  .demo .box { width: 56px; height: 56px; border-radius: var(--radius-md); background: var(--brand); display: flex; align-items: center; justify-content: center; color: #fff; }
+  .demo .box svg { width: 24px; height: 24px; }
+  .demo:hover { border-color: var(--border-hover); }
+
+  /* enter keyframes — shadcn animate-in family, YODY easing */
+  @keyframes y-fade-in   { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes y-zoom-in   { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
+  @keyframes y-slide-top    { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes y-slide-bottom { from { opacity: 0; transform: translateY(16px); }  to { opacity: 1; transform: translateY(0); } }
+  @keyframes y-slide-left   { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes y-slide-right  { from { opacity: 0; transform: translateX(16px); }  to { opacity: 1; transform: translateX(0); } }
+  @keyframes y-spin   { to { transform: rotate(360deg); } }
+  @keyframes y-caret  { 0%,70%,100% { opacity: 1; } 20%,50% { opacity: 0; } }
+  @keyframes y-shimmer{ from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  @keyframes y-pulse-ring { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--iris) 50%, transparent); } 70%,100% { box-shadow: 0 0 0 12px transparent; } }
+  @keyframes y-progress-indet { 0% { left: -40%; } 100% { left: 100%; } }
+  @keyframes y-toast-in { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
+  .demo.run .box { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-out); animation-fill-mode: both; }
+  .demo.run.fade   .box { animation-name: y-fade-in; }
+  .demo.run.zoom   .box { animation-name: y-zoom-in; animation-timing-function: var(--ease-overshoot); }
+  .demo.run.top    .box { animation-name: y-slide-top; }
+  .demo.run.bottom .box { animation-name: y-slide-bottom; }
+  .demo.run.left   .box { animation-name: y-slide-left; }
+  .demo.run.right  .box { animation-name: y-slide-right; }
+
+  /* component motion row */
+  .cgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .panel { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-2); }
+  .panel .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+  /* accordion */
+  .acc { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--bg); }
+  .acc-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 14px; background: none; border: 0; cursor: pointer; font: 600 14px/1 var(--font-body); color: var(--fg-1); text-align: left; }
+  .acc-trigger svg { width: 16px; height: 16px; color: var(--fg-3); transition: transform var(--dur) var(--ease-out); }
+  .acc.open .acc-trigger svg { transform: rotate(180deg); }
+  .acc-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur) var(--ease-out); }
+  .acc.open .acc-body { grid-template-rows: 1fr; }
+  .acc-body > div { overflow: hidden; }
+  .acc-body p { margin: 0; padding: 0 14px 14px; font-size: 14px; line-height: 1.6; color: var(--fg-2); }
+
+  /* caret */
+  .caret-field { display: flex; align-items: center; gap: 1px; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); font: 400 14px/1 var(--font-body); color: var(--fg-1); }
+  .caret { display: inline-block; width: 2px; height: 18px; background: var(--brand); animation: y-caret 1.25s ease-out infinite; }
+
+  /* spinner */
+  .spinner { width: 22px; height: 22px; border: 2.5px solid var(--bg-muted); border-top-color: var(--brand); border-radius: 50%; animation: y-spin .7s linear infinite; }
+
+  /* pulse-ring dot */
+  .pulse-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--iris); animation: y-pulse-ring 1.8s var(--ease-out) infinite; }
+
+  /* skeleton shimmer */
+  .skel { height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--bg-muted) 0%, color-mix(in oklab, var(--bg-muted) 55%, #fff) 50%, var(--bg-muted) 100%); background-size: 200% 100%; animation: y-shimmer 1.6s linear infinite; }
+  .skel.w70 { width: 70%; } .skel.w90 { width: 90%; }
+
+  /* progress indeterminate */
+  .prog { position: relative; height: 8px; border-radius: 999px; background: var(--bg-muted); overflow: hidden; }
+  .prog .bar { position: absolute; top: 0; height: 100%; width: 40%; border-radius: 999px; background: var(--brand); animation: y-progress-indet 1.4s var(--ease-out) infinite; }
+
+  /* toast */
+  /* toast — visible by default; .run replays the entrance (robust vs throttled capture) */
+  .toast { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); box-shadow: var(--shadow-md); font-size: 13px; color: var(--fg-1); }
+  .toast.run { animation: y-toast-in var(--dur-slow) var(--ease-overshoot); }
+  .toast .ok { width: 18px; height: 18px; color: var(--mint-deep); }
+
+  .replay { font: 600 11px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand); background: none; border: 0; cursor: pointer; padding: 4px 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track .dot { transition: none; }
+    .demo.run .box, .caret, .spinner, .pulse-dot, .skel, .prog .bar, .toast, .acc-trigger svg, .acc-body { animation: none !important; transition: none !important; }
+    .acc-body { grid-template-rows: 1fr; }
+  }
+</style>
+</head>
+<body data-surface="app">
+  <div class="wrap">
+    <header>
+      <span class="eyebrow">Foundations · Motion</span>
+      <h1>Motion</h1>
+      <p class="lede">Token easing + duration, hệ enter/exit theo chuẩn shadcn (<span class="mono">animate-in</span>) và motion cấp component. Bấm vào ô để phát lại.</p>
+    </header>
+
+    <!-- Tokens -->
+    <section class="card">
+      <div class="card-head"><h2>Easing &amp; duration</h2><span class="hint">colors_and_type.css</span></div>
+      <div>
+        <div class="tok"><span class="name">--ease-out</span><span class="val">cubic-bezier(.4, 0, .2, 1)</span><span class="use">chuẩn · enter/exit, hover</span></div>
+        <div class="tok"><span class="name">--ease-overshoot</span><span class="val">cubic-bezier(.34, 1.56, .64, 1)</span><span class="use">overshoot · panel, drawer, zoom</span></div>
+      </div>
+      <div>
+        <div class="lbl" style="margin-bottom:8px;">ease-out · 300ms</div>
+        <div class="track track--out" data-replay><span class="dot"></span></div>
+        <div class="lbl" style="margin:14px 0 8px;">ease-overshoot · 300ms</div>
+        <div class="track track--over" data-replay><span class="dot"></span></div>
+      </div>
+      <div class="chips">
+        <span class="chip"><b>150ms</b> · --dur-fast</span>
+        <span class="chip"><b>200ms</b> · --dur</span>
+        <span class="chip"><b>300ms</b> · --dur-slow</span>
+        <span class="chip"><b>600ms</b> · --motion-count</span>
+      </div>
+    </section>
+
+    <!-- Enter / exit -->
+    <section class="card">
+      <div class="card-head"><h2>Enter animations</h2><span class="hint">shadcn · animate-in family</span></div>
+      <div class="grid">
+        <div class="demo fade" data-replay><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></span><span class="util">fade-in-0</span></div>
+        <div class="demo zoom" data-replay><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span><span class="util">zoom-in-95</span></div>
+        <div class="demo top" data-replay><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span><span class="util">slide-in-from-top-2</span></div>
+        <div class="demo bottom" data-replay><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span><span class="util">slide-in-from-bottom-2</span></div>
+        <div class="demo left" data-replay><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></span><span class="util">slide-in-from-left-2</span></div>
+        <div class="demo right" data-replay><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span><span class="util">slide-in-from-right-2</span></div>
+      </div>
+    </section>
+
+    <!-- Component motion -->
+    <section class="card">
+      <div class="card-head"><h2>Component motion</h2><span class="hint">registry/ui patterns</span></div>
+      <div class="cgrid">
+        <div class="panel">
+          <div class="top"><span class="lbl">Accordion · height</span><button class="replay" data-acc>Toggle</button></div>
+          <div class="acc open" id="acc1">
+            <button class="acc-trigger" data-acc>Chính sách đổi trả<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div class="acc-body"><div><p>Đổi trả trong 7 ngày với sản phẩm còn nguyên tem mác.</p></div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="top"><span class="lbl">Caret · blink</span><span class="mono" style="font-size:11px;color:var(--fg-3)">caret-blink</span></div>
+          <div class="caret-field">Tìm sản phẩm<span class="caret"></span></div>
+          <div class="top" style="margin-top:4px"><span class="lbl">Spinner</span><span class="mono" style="font-size:11px;color:var(--fg-3)">spin</span></div>
+          <div class="spinner"></div>
+        </div>
+        <div class="panel">
+          <div class="top"><span class="lbl">Pulse ring · live</span><span class="mono" style="font-size:11px;color:var(--fg-3)">pulse-ring</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="pulse-dot"></span><span style="font-size:13px;color:var(--fg-2)">3 cửa hàng đang đồng bộ</span></div>
+          <div class="top" style="margin-top:4px"><span class="lbl">Skeleton · shimmer</span><span class="mono" style="font-size:11px;color:var(--fg-3)">shimmer</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span class="skel w90"></span><span class="skel w70"></span></div>
+        </div>
+        <div class="panel">
+          <div class="top"><span class="lbl">Progress · indeterminate</span></div>
+          <div class="prog"><span class="bar"></span></div>
+          <div class="top" style="margin-top:8px"><span class="lbl">Toast · enter</span><button class="replay" data-toast>Replay</button></div>
+          <div id="toast-slot"><div class="toast"><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Đã lưu phiếu nhập</div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+  // Boxes are visible by default (base = end state). Clicking replays the
+  // entrance from hidden; on completion we strip .run so the tile never stays
+  // pinned to the from-frame (robust against throttled/static capture).
+  document.querySelectorAll('.demo[data-replay]').forEach(function (el) {
+    var box = el.querySelector('.box');
+    el.addEventListener('click', function () {
+      el.classList.remove('run'); void el.offsetWidth; el.classList.add('run');
+    });
+    if (box) box.addEventListener('animationend', function () { el.classList.remove('run'); });
+  });
+  // easing tracks: toggle travel on click (CSS transition, not keyframes)
+  document.querySelectorAll('.track[data-replay]').forEach(function (el) {
+    el.addEventListener('click', function () { el.classList.toggle('run'); });
+  });
+  // accordion toggle
+  document.querySelectorAll('[data-acc]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.getElementById('acc1').classList.toggle('open');
+    });
+  });
+  // toast replay (toggle .run + reflow; stays visible at base)
+  document.querySelectorAll('[data-toast]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var t = document.querySelector('#toast-slot .toast');
+      if (!t) return;
+      t.classList.remove('run'); void t.offsetWidth; t.classList.add('run');
+    });
+  });
+</script>
+</body>
+</html>
